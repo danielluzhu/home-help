@@ -1,0 +1,152 @@
+{
+  "title": "Thanks for helping at our place",
+  "highlight": "our place",
+  "timeZone": "America/Los_Angeles",
+  "dates": { "start": "2026-12-01", "end": "2026-12-10" },
+
+  "welcome": [
+    "Thank you for looking after everyone while we're away!",
+    "Sign up for the days you can come, and tap **Done** on a task when you've done it so the next person knows."
+  ],
+  "signature": "🏡 Sam and Alex",
+
+  "who": {
+    "title": "Meet the crew",
+    "items": [
+      {
+        "name": "Biscuit",
+        "subtitle": "Dog, 4 years",
+        "emoji": "🐶",
+        "photo": "",
+        "about": "Golden mix. Very friendly, a little shy with new people for the first five minutes.",
+        "note": "walks, belly rubs, tennis balls",
+        "tip": "Pulls on the leash when he sees squirrels. Stop and wait until he looks back at you."
+      },
+      {
+        "name": "Pepper",
+        "subtitle": "Cat, 7 years",
+        "emoji": "🐱",
+        "photo": "",
+        "about": "Grey tabby. Mostly hides under the bed and comes out once it's quiet.",
+        "note": "chin scratches, the feather wand"
+      },
+      {
+        "name": "The plants",
+        "subtitle": "Living room and porch",
+        "emoji": "🪴",
+        "photo": "",
+        "about": "Ferns by the window, herbs on the porch, a big monstera in the corner."
+      }
+    ],
+    "note": "🐾 Everyone gets along. Biscuit and Pepper can be in the same room."
+  },
+
+  "gallery": {
+    "title": "Photos",
+    "photos": [],
+    "owner": "Sam",
+    "uploads": true,
+    "comments": true
+  },
+
+  "visit": {
+    "title": "What a visit involves",
+    "duration": "About 30 minutes.",
+    "steps": [
+      { "text": "Feed Biscuit and Pepper: one scoop each.", "task": "feed" },
+      "Take Biscuit for a 20-minute walk around the block.",
+      "Check the tasks below (water bowls, litter, plants) and tap **Done** on any you do.",
+      "Lock up and put the key back in the lockbox."
+    ]
+  },
+
+  "info": [
+    {
+      "label": "Getting in",
+      "photo": "",
+      "lines": ["Front door", "Key is in the lockbox by the garage"],
+      "highlight": "We'll text you the lockbox code."
+    },
+    {
+      "label": "Leash & bags",
+      "lines": ["On the hook by the front door."],
+      "photoSlot": "leash"
+    },
+    {
+      "label": "Emergency",
+      "lines": ["Vet: add your vet's name and number here"]
+    }
+  ],
+
+  "tips": {
+    "title": "Walking & play",
+    "cards": [
+      {
+        "icon": "🦮",
+        "title": "Walking",
+        "ordered": true,
+        "items": [
+          "Leash on before opening the door.",
+          "Short loop: left out the door, around the block (about 20 minutes).",
+          "Wipe his paws with the towel by the door when you're back."
+        ],
+        "note": "He'll try to eat things on the sidewalk. A firm \"leave it\" works."
+      },
+      {
+        "icon": "🪶",
+        "title": "Playing with Pepper",
+        "items": [
+          "Sit on the floor and wait; she'll come to you.",
+          "The feather wand is in the basket by the couch."
+        ]
+      }
+    ]
+  },
+
+  "care": {
+    "title": "Food, water & plants",
+    "cards": [
+      {
+        "icon": "🍽️",
+        "title": "Food",
+        "subtitle": "Kibble in the pantry",
+        "photo": "",
+        "facts": [["How much", "1 scoop each, once a day"], ["Where", "Pantry, bottom shelf"]],
+        "tables": [["Feeding times", [["Morning", "Biscuit: 1 scoop"], ["Evening", "Pepper: 1 scoop"]]]],
+        "tasks": [{ "id": "feed", "label": "Feed everyone", "every": 1 }],
+        "steps": ["Fill the scoop level, not heaped.", "Put Pepper's bowl on the counter so Biscuit can't reach it."],
+        "note": "No table scraps, please. Grapes and chocolate are dangerous for dogs."
+      },
+      {
+        "icon": "💧",
+        "title": "Water",
+        "subtitle": "Two bowls in the kitchen",
+        "tasks": [{ "id": "water", "label": "Wash and refill the bowls", "when": "Every 2 days", "every": 2 }],
+        "steps": ["Rinse both bowls with hot water.", "Refill with cold tap water."]
+      },
+      {
+        "icon": "🧹",
+        "title": "Litter",
+        "subtitle": "Litter box in the laundry room",
+        "tasks": [
+          { "id": "litter", "label": "Scoop the litter box", "when": "Every 2 days", "every": 2 },
+          { "id": "litter-bag", "label": "Take the bag out when full", "flag": { "since": "2026-12-01", "text": "Full now: please take it out" } }
+        ],
+        "steps": ["Scoop clumps into the bag on the hook.", "Tie the bag and put it in the outside trash."],
+        "video": { "url": "https://www.youtube.com/results?search_query=how+to+scoop+a+litter+box", "label": "How to scoop a litter box (video)" }
+      },
+      {
+        "icon": "🪴",
+        "title": "Plants",
+        "subtitle": "Watering can under the sink",
+        "facts": [["Ferns", "Soak until water drains out"], ["Herbs", "A cup each"], ["Monstera", "Skip it, it's fine"]],
+        "tasks": [{ "id": "plants", "label": "Water the plants", "when": "Every 3 days", "every": 3 }]
+      }
+    ]
+  },
+
+  "schedule": {
+    "title": "Schedule",
+    "times": ["Morning", "Midday", "Afternoon", "Evening", "Flexible"]
+  }
+}

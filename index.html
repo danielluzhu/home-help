@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Home Help</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap">
+<style>
+/* ---- Colors and fonts: change these to restyle the whole page. ---- */
+:root{
+  --bg:#fff8f0; --surface:#ffffff; --fg:#3b2a1f; --muted:#8a6f5f; --line:#f1e0cc;
+  --ink:#c2501f; --ink-soft:#ffe8da; --on-ink:#ffffff;     /* accent: buttons, links, headings */
+  --open:#f6b73c; --open-soft:#fff2d4; --open-fg:#6b4300; /* open days, notes and warnings */
+  --taken:#8cbf88; --taken-soft:#eff7ec;                  /* days someone signed up for */
+  --sel:#c2501f; --sel-soft:#ffe1d1;                      /* days you're picking */
+  --danger:#c0392b;
+  --glow-a:#ffe0c2; --glow-b:#fff0bf; --welcome-a:#fff4e4; --welcome-b:#ffe6d3;
+  --shadow:0 1px 2px rgba(150,90,40,.06),0 8px 24px rgba(150,90,40,.08);
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Nunito","Helvetica Neue",Arial,system-ui,sans-serif;
+  color-scheme:light;
+}
+/* ---- Layout ---- */
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 420px at 0% -5%,var(--glow-a),transparent 65%),radial-gradient(800px 420px at 100% 0%,var(--glow-b),transparent 60%),var(--bg);background-repeat:no-repeat;color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) calc(96px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+img{max-width:100%}
+.wrap{max-width:720px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,7vw,3.3rem);font-weight:600;letter-spacing:-.015em}
+h2{font-size:1.5rem;font-weight:600;margin-bottom:.6rem;display:flex;align-items:center;gap:.55rem}
+h2::before{content:"";width:.55rem;height:1.35rem;border-radius:999px;background:linear-gradient(var(--ink),var(--open));flex:none}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+a{color:var(--ink)}
+section{padding-block:1.75rem}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--open);outline-offset:2px}
+.note{color:var(--muted);font-size:.95rem}
+.ro{font-size:.85rem;color:var(--muted)}
+.k{font-weight:800;color:var(--ink);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+.tbd{color:var(--muted);font-weight:400;font-style:italic}
+.callout{background:var(--open-soft);color:var(--open-fg);border-radius:12px;padding:.55rem .75rem;font-size:.9rem;margin:0}
+.oops{margin:3rem auto;max-width:640px;background:var(--surface);border:2px solid var(--danger);border-radius:16px;padding:1.25rem;display:grid;gap:.6rem}
+.oops pre{white-space:pre-wrap;background:var(--bg);padding:.6rem;border-radius:8px;margin:0;font-size:.9rem}
+
+/* Header */
+header.hero{padding-block:2.75rem 1.75rem;display:grid;gap:.9rem}
+.hero .hl{color:var(--ink);background:linear-gradient(transparent 72%,color-mix(in srgb,var(--open) 45%,transparent) 72%);padding:0 .08em}
+.dates{display:inline-flex;align-items:center;gap:.5rem;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:999px;padding:.35rem .9rem;font-weight:700;width:max-content;max-width:100%}
+.welcome{background:linear-gradient(135deg,var(--welcome-a),var(--welcome-b));border-radius:20px;padding:1.1rem 1.25rem;box-shadow:var(--shadow);display:grid;gap:.5rem;max-width:40rem;line-height:1.5;font-size:1.02rem}
+.welcome .sig{font-family:var(--display);font-weight:700;color:var(--ink);font-size:1.05rem}
+
+/* Cards shared by several sections */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:.75rem;align-items:start}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:1rem 1.1rem;display:grid;gap:.25rem;overflow:hidden;align-content:start}
+.fact-pic{display:block;margin:-1rem -1.1rem .5rem;border-bottom:1px solid var(--line);position:relative}
+.fact-pic img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.fact .slot-add{justify-self:start;margin-top:.4rem}
+.fact ul,.fact ol{margin:.2rem 0 .3rem;padding-left:1.15rem;display:grid;gap:.35rem;line-height:1.45}
+.fact .callout{margin-top:.2rem}
+.pill{position:absolute;background:rgba(0,0,0,.55);color:#fff;font-size:.75rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;max-width:calc(100% - .8rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.pill.by{left:.4rem;bottom:.4rem} .pill.cc{left:.4rem;top:.4rem}
+.rm{position:absolute;top:.35rem;right:.35rem;width:1.75rem;height:1.75rem;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:1.1rem;line-height:1;cursor:pointer;display:grid;place-items:center}
+
+/* Who's who */
+.group{margin:.75rem 0 0;border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+.group img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:.75rem}
+.kcard{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.kcard .ph{aspect-ratio:1;background:linear-gradient(135deg,var(--ink-soft),var(--open-soft));display:grid;place-items:center;font-size:3.5rem}
+.kcard img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.kcard .nm{padding:.65rem .8rem .8rem;display:grid;gap:.45rem;align-content:start;line-height:1.4;min-width:0;font-size:.92rem}
+.kcard .who{display:flex;flex-wrap:wrap;align-items:baseline;gap:.1rem .45rem;line-height:1.2}
+.kcard .who b{font-family:var(--display);font-size:1.15rem;color:var(--ink)}
+.kcard .who span,.kcard .about{color:var(--muted)}
+.kcard .k{margin-right:.15rem}
+.group-note{margin-top:.75rem;background:var(--open-soft);color:var(--open-fg);border-radius:14px;padding:.6rem .9rem;font-weight:700}
+/* On phones the cards stack, photo beside the text. */
+@media (max-width:600px){
+  .kgrid{grid-template-columns:1fr}
+  .kcard{grid-template-columns:7.5rem minmax(0,1fr);grid-template-rows:none}
+  .kcard .pic img,.kcard .pic .ph{height:100%;min-height:7.5rem;aspect-ratio:auto}
+}
+
+/* Gallery and photo viewer */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem;margin-top:.6rem}
+.gallery .tile{position:relative;min-width:0}
+.gallery a{display:block;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.gallery img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.gallery .add-photo{appearance:none;font:inherit;font-weight:700;color:var(--ink);background:var(--ink-soft);border:1.5px dashed var(--ink);border-radius:16px;aspect-ratio:1;cursor:pointer;display:grid;place-content:center;gap:.2rem;text-align:center;padding:.5rem}
+.gallery .add-photo b{font-size:1.8rem;line-height:1}
+.gallery .add-photo[disabled]{opacity:.6;cursor:default}
+@media (prefers-reduced-motion:no-preference){.gallery img{transition:transform .2s}.gallery a:hover img{transform:scale(1.03)}}
+.viewer{max-width:640px}
+.viewer .big{display:block;margin:-1.25rem -1.25rem 0;background:#000;overflow:hidden}
+.viewer .big img{display:block;width:100%;max-height:60vh;object-fit:contain}
+.viewer .vhead{display:flex;justify-content:space-between;align-items:center;gap:.5rem;font-size:.88rem;color:var(--muted)}
+.viewer .vhead a{font-weight:700}
+.comments{display:grid;gap:.6rem}
+.cmt{display:grid;gap:.15rem;font-size:.93rem}
+.cmt .meta{display:flex;align-items:baseline;gap:.45rem;flex-wrap:wrap}
+.cmt .meta small{color:var(--muted);font-size:.78rem}
+.cmt p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
+.cmt .cacts{display:flex;gap:.9rem}
+.cmt .cacts button{appearance:none;border:0;background:none;padding:.15rem 0;font:inherit;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer}
+.cmt .cacts button.reply{color:var(--ink)}
+.replies{display:grid;gap:.6rem;margin:.35rem 0 0 .25rem;padding-left:.75rem;border-left:2px solid var(--line)}
+.replies .replies .replies .replies{margin-left:0;padding-left:0;border-left:0}
+.cform{display:grid;gap:.5rem;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.7rem}
+.cform .field input,.cform .field textarea{background:var(--surface)}
+.cform .actions{justify-content:space-between;align-items:center}
+
+/* Visit steps: numbered badges */
+ol.steps{list-style:none;margin:.5rem 0 0;padding:0;counter-reset:step;display:grid;gap:.6rem}
+ol.steps li{counter-increment:step;position:relative;padding:.7rem .9rem .7rem 3.1rem;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+ol.steps li::before{content:counter(step);position:absolute;left:.8rem;top:.7rem;width:1.65rem;height:1.65rem;border-radius:50%;background:var(--ink);color:var(--on-ink);font-weight:700;display:grid;place-items:center;font-size:.95rem}
+ol.steps .last{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .6rem;margin-top:.4rem;color:var(--muted);font-size:.92rem}
+
+/* Care cards and tasks */
+.care{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:.75rem}
+@media (max-width:559px){.care{grid-template-columns:1fr}}
+.care-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:1rem;display:grid;gap:.7rem;align-content:start;overflow:hidden}
+.care-pic{display:block;margin:-1rem -1rem 0;border-bottom:1px solid var(--line);position:relative}
+.care-pic img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.care-pic .pill{right:.4rem;bottom:.4rem;left:auto;font-weight:400;font-size:.68rem}
+.care-h{display:flex;gap:.65rem;align-items:center}
+.care-h .ro{display:block;line-height:1.3}
+.care-i{font-size:1.5rem;width:2.4rem;height:2.4rem;display:grid;place-items:center;background:linear-gradient(135deg,var(--ink-soft),var(--open-soft));border-radius:14px;flex:none}
+.care dl{margin:0;display:grid;gap:.15rem;font-size:.92rem}
+.care dt{color:var(--muted);font-size:.85rem}
+.care dd+dt{margin-top:.4rem}
+.care dd{margin:0;font-weight:600}
+.fold{font-size:.92rem;border-top:1px solid var(--line);padding-top:.6rem}
+.fold summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.4rem}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary::before{content:"▸";color:var(--ink);transition:transform .15s}
+.fold[open] summary::before{transform:rotate(90deg)}
+.fold[open] summary{margin-bottom:.4rem}
+.fold ol{margin:0;padding-left:1.15rem;display:grid;gap:.25rem}
+.fold .callout,.fold .video{margin-top:.6rem}
+.video a{font-weight:700}
+table.tbl{border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tbl th{text-align:left;font-weight:700;padding:0 .75rem .15rem 0;white-space:nowrap;vertical-align:top}
+.tbl td{padding:0 0 .15rem}
+.chore-box{display:grid;gap:.35rem}
+.chore{display:flex;gap:.6rem;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;background:var(--bg);padding:.55rem .65rem;font-size:.92rem}
+.chore.due{background:var(--open-soft);border-color:var(--open);color:var(--open-fg)}
+.chore-t{display:grid;gap:.1rem;min-width:0}
+.chore-t .when,.chore-s{font-size:.85rem}
+.chore-t .when{color:var(--muted)}
+.chore.due .chore-t .when{color:inherit}
+.chore.due .chore-s{font-weight:700}
+.chore .btn{flex:none}
+.hist{font-size:.88rem;padding:0 .2rem}
+.hist summary{cursor:pointer;color:var(--muted);list-style:none;display:flex;align-items:center;gap:.35rem}
+.hist summary::-webkit-details-marker{display:none}
+.hist summary::before{content:"▸";transition:transform .15s}
+.hist[open] summary::before{transform:rotate(90deg)}
+.log{list-style:none;margin:.2rem 0 0;padding:0;display:grid;gap:.25rem;font-size:.92rem}
+.log li{display:flex;align-items:center;justify-content:space-between;gap:.5rem;border-top:1px solid var(--line);padding-top:.25rem}
+.log .unlog{appearance:none;border:0;background:none;color:var(--muted);font-size:1.2rem;line-height:1;cursor:pointer;padding:.2rem .4rem}
+
+/* Schedule calendar */
+.legend{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;font-size:.9rem;color:var(--muted);margin:.5rem 0 1rem}
+.legend span{display:inline-flex;align-items:center;gap:.4rem}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.dot.open{background:var(--open)} .dot.taken{background:var(--taken)} .dot.sel{background:var(--sel)}
+.cal-title{font-weight:700;font-size:1.05rem;margin-bottom:.5rem}
+.cal-head,.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-head span{text-align:center;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-bottom:.3rem}
+.cal-day{min-width:0;min-height:5.25rem;display:flex;flex-direction:column;gap:3px}
+.cal-day .dn{font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);padding:0 .2rem;white-space:nowrap;overflow:hidden}
+.cal-day.out .dn{opacity:.4}
+.cal-day.today .dn{color:var(--ink)}
+.cal-day.today .dn::after{content:" · today";font-weight:600}
+.cal button{appearance:none;font:inherit;cursor:pointer;border-radius:10px;border:1.5px solid transparent;text-align:left;min-width:0;width:100%;line-height:1.2}
+.cal .res{display:grid;padding:.25rem .35rem;background:var(--taken-soft);border-left:3px solid var(--taken);color:var(--fg);font-size:.8rem}
+.cal .res small{font-size:.66rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.cal .res .nm{font-weight:700;overflow-wrap:anywhere}
+.cal .add{font-weight:700;font-size:.8rem;padding:.3rem .35rem}
+.cal .add.open{min-height:3.75rem;background:var(--open-soft);color:var(--open-fg);border-color:var(--open)}
+.cal .add.sel{min-height:3.75rem;background:var(--sel-soft);color:var(--sel);border-color:var(--sel)}
+.cal .add.more{background:transparent;border:1.5px dashed var(--line);color:var(--muted);text-align:center;padding:.05rem}
+.cal .res:hover,.cal .add.open:hover{filter:brightness(.97)}
+.cal .add.more:hover{border-color:var(--open);color:var(--open-fg)}
+.cal .short{display:none}
+/* Phone cells are narrow: first name only, on one line. */
+@media (max-width:599px){.cal .res,.cal .add{padding:.25rem}.cal .full{display:none}.cal .short{display:inline}.cal .res .nm.short{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.74rem}}
+@media (min-width:600px){.cal-head,.cal{gap:6px}.cal-day{min-height:6rem}.cal .add.open,.cal .add.sel{min-height:4.5rem}.cal .res{font-size:.85rem;padding:.3rem .45rem}.cal .add{font-size:.9rem;padding:.35rem .45rem}}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:20px;padding:1.25rem;color:var(--muted);text-align:center}
+
+/* Buttons, dialogs, the sign-up bar */
+.btn{appearance:none;font:inherit;font-weight:800;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--on-ink);padding:.55rem 1.15rem;cursor:pointer}
+.btn:not(.ghost):not(.danger){box-shadow:0 4px 12px color-mix(in srgb,var(--ink) 25%,transparent)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.small{padding:.35rem .85rem;font-size:.9rem}
+.btn.danger{border-color:var(--danger);color:var(--danger);background:transparent}
+.btn[disabled]{opacity:.5;cursor:default}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:.75rem max(16px,env(safe-area-inset-right,0px)) calc(.75rem + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--surface);box-shadow:0 -8px 30px rgba(150,90,40,.12);border-radius:20px 20px 0 0;z-index:20}
+.bar .in{max-width:720px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.actions{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:rgba(60,30,10,.4);display:flex;align-items:flex-end;justify-content:center;z-index:30;padding:max(16px,env(safe-area-inset-left,0px))}
+@media (min-width:600px){.modal{align-items:center}}
+.card{background:var(--surface);color:var(--fg);border-radius:22px;box-shadow:0 20px 60px rgba(60,30,10,.25);max-width:520px;width:100%;max-height:min(90vh,100%);overflow:auto;padding:1.25rem;display:grid;gap:.9rem}
+.field{display:grid;gap:.3rem}
+.field label{font-weight:700;font-size:.9rem}
+.field input,.field textarea,.field select{font:inherit;padding:.5rem .65rem;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);width:100%;min-width:0}
+.field textarea{min-height:4.5rem;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+@media (max-width:440px){.row{grid-template-columns:1fr}}
+.picked{display:flex;flex-wrap:wrap;gap:.35rem}
+.picked span{background:var(--sel-soft);color:var(--sel);border-radius:8px;padding:.2rem .55rem;font-size:.9rem;font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:.5rem .9rem;border-radius:999px;font-weight:700;z-index:40;max-width:calc(100% - 32px)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// The page itself. You shouldn't need to change anything below to use Home Help:
+// the words, people, pets, tasks and dates all come from site.json.
+(function(){
+'use strict';
+var S = {};                // site.json
+var app = document.getElementById('app');
+var RES = [];              // schedule sign-ups: {id, date, name, time}
+var PHOTOS = [];           // files in photos/
+var UPLOADS = [];          // photos visitors added: {id, file, name, slot}; slot '' is the gallery
+var CHORES = [];           // task sign-offs, newest first: {id, task, date, name}
+var COMMENTS = [];         // comments on photos, oldest first: {id, photo, parent, name, body, created_at}
+var sel = {};              // days this visitor has picked: 'YYYY-MM-DD' -> true
+var modal = null, editing = null;
+var viewing = null;        // the photo open in the viewer: {file, src, by}
+var replyTo = null;        // comment id the viewer's form is replying to; null for a new comment
+var uploading = false;     // true while gallery photos upload, or the slot being uploaded to
+var photoSlot = '';        // where the file picker's photos go: '' for the gallery, or an info card's photoSlot
+var foldOpen = {};         // the page re-renders often, so remember which folds are open
+var visitor = {name: '', time: ''};
+try { var v = JSON.parse(localStorage.getItem('home-help-visitor') || 'null'); if (v && v.name) visitor = {name: v.name, time: v.time || ''}; } catch(e){}
+
+// ---- small helpers ----
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+// Text from site.json may use **bold** and [links](https://...).
+function rich(s){
+  return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|#[\w-]+)\)/g, function(_, t, u){ return '<a href="' + u + '"' + (u.charAt(0) === '#' ? '' : ' target="_blank" rel="noopener"') + '>' + t + '</a>'; })
+    .replace(/\n/g, '<br>');
+}
+function list(x){ return Array.isArray(x) ? x : x ? [x] : []; }
+function parseDate(s){ var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; }
+function iso(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+// "Today" is the day in site.json's timeZone (your home), wherever the visitor is.
+function tz(){ return S.timeZone || undefined; }
+function dayKey(d){ try { return new Intl.DateTimeFormat('en-CA', {timeZone: tz(), year: 'numeric', month: '2-digit', day: '2-digit'}).format(d); } catch(e){ return iso(d); } }
+function today(){ return dayKey(new Date()); }
+var DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function fmtShort(d){ return DOW[d.getDay()] + ' ' + MON[d.getMonth()] + ' ' + d.getDate(); }
+function fmtLong(d){ return MON[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
+function dayWord(k){ var d = Math.round((parseDate(today()) - parseDate(k)) / 864e5); return d === 0 ? 'today' : d === 1 ? 'yesterday' : fmtShort(parseDate(k)); }
+function days(){ var dt = S.dates || {}, a = parseDate(dt.start), b = parseDate(dt.end), out = []; if (!a || !b || b < a) return out; for (var d = new Date(a); d <= b && out.length < 120; d.setDate(d.getDate()+1)) out.push(new Date(d)); return out; }
+function times(){ return list((S.schedule || {}).times).length ? S.schedule.times : ['Morning','Midday','Afternoon','Evening','Flexible']; }
+function timeLabel(t){ return t === 'Flexible' ? 'Any time' : t; }
+function timeShort(t){ return {Morning:'AM', Midday:'Noon', Afternoon:'PM', Evening:'Eve', Flexible:'Any'}[t] || t; }
+function timeOptions(cur){ return times().map(function(t){ return '<option value="' + esc(t) + '"' + (t === cur ? ' selected' : '') + '>' + esc(timeLabel(t)) + '</option>'; }).join(''); }
+function resOn(k){ var ts = times(); return RES.filter(function(r){ return r.date === k; }).sort(function(a, b){ return ts.indexOf(a.time) - ts.indexOf(b.time) || a.id - b.id; }); }
+function hasPhoto(f){ return f && PHOTOS.indexOf(f) >= 0; }
+function img(f, alt, extra){ return '<img src="photos/' + encodeURIComponent(f) + '" alt="' + esc(alt) + '" loading="lazy"' + (extra || '') + '>'; }
+function careCards(){ return list((S.care || {}).cards); }
+function allTasks(){ var out = []; careCards().forEach(function(c){ list(c.tasks).forEach(function(t){ out.push(t); }); }); return out; }
+function findTask(id){ return allTasks().filter(function(t){ return t.id === id; })[0] || null; }
+function remember(){ try { localStorage.setItem('home-help-visitor', JSON.stringify(visitor)); } catch(e){} }
+function fold(key, summary, body){ return '<details class="fold" data-fold="' + esc(key) + '"' + (foldOpen[key] ? ' open' : '') + '><summary><span class="k">' + esc(summary) + '</span></summary>' + body + '</details>'; }
+
+// Where a task stands: last sign-off, and for repeating tasks when it's next due.
+function taskStatus(t){
+  var log = CHORES.filter(function(c){ return c.task === t.id; }), last = log[0];
+  var lastTxt = last ? 'Last done ' + dayWord(last.date) + ' by ' + last.name : 'Not done yet';
+  // A flag (e.g. "Full now") marks it as needing doing until someone signs off on or after that day.
+  if (t.flag && t.flag.since && !(last && last.date >= t.flag.since)) return {due: true, last: last, lines: [lastTxt, t.flag.text || 'Needs doing now']};
+  if (!t.every) return {due: false, last: last, lines: [lastTxt]};
+  if (!last) return {due: true, last: last, lines: ['Not done yet']};
+  var next = parseDate(last.date); next.setDate(next.getDate() + t.every);
+  var diff = Math.round((next - parseDate(today())) / 864e5);
+  var nextTxt = diff < 0 ? 'Overdue since ' + fmtShort(next) : diff === 0 ? 'Due today' : diff === 1 ? (t.every === 1 ? 'Done for today' : 'Due tomorrow') : 'Next due ' + fmtShort(next);
+  return {due: diff <= 0, last: last, lines: [lastTxt, nextTxt]};
+}
+
+// ---- the page ----
+function render(){
+  var ds = days(), h = ['<div class="wrap">'];
+
+  // Header: title (with one phrase highlighted), dates, welcome note.
+  var title = S.title || 'Home Help', hl = S.highlight && title.indexOf(S.highlight) >= 0 ? S.highlight : '';
+  document.title = title;
+  h.push('<header class="hero"><h1>' + (hl ? esc(title.slice(0, title.indexOf(hl))) + '<span class="hl">' + esc(hl) + '</span>' + esc(title.slice(title.indexOf(hl) + hl.length)) : esc(title)) + '</h1>');
+  if (ds.length) h.push('<div class="dates">🗓 ' + fmtLong(ds[0]) + ' – ' + fmtLong(ds[ds.length - 1]) + ' · ' + ds.length + ' day' + (ds.length > 1 ? 's' : '') + '</div>');
+  if (list(S.welcome).length || S.signature) h.push('<div class="welcome">' + list(S.welcome).map(function(p){ return '<p>' + rich(p) + '</p>'; }).join('') + (S.signature ? '<p class="sig">' + esc(S.signature) + '</p>' : '') + '</div>');
+  h.push('</header>');
+
+  // Who's who: pets, people, plants...
+  var who = S.who || {};
+  if (list(who.items).length) {
+    h.push('<section id="who"><h2>' + esc(who.title || 'Meet everyone') + '</h2>');
+    if (hasPhoto(who.photo)) h.push('<figure class="group">' + img(who.photo, 'Everyone together') + '</figure>');
+    h.push('<div class="kgrid">' + who.items.map(function(x){
+      return '<div class="kcard"><div class="pic">' + (hasPhoto(x.photo) ? img(x.photo, x.name) : '<div class="ph" aria-hidden="true">' + esc(x.emoji || '🏡') + '</div>') + '</div>' +
+        '<div class="nm"><div class="who"><b>' + esc(x.name) + '</b>' + (x.subtitle ? '<span>' + esc(x.subtitle) + '</span>' : '') + '</div>' +
+        (x.about ? '<p class="about">' + rich(x.about) + '</p>' : '') +
+        (x.note ? '<p><span class="k">' + esc(x.noteLabel || 'Likes') + '</span> ' + rich(x.note) + '</p>' : '') +
+        (x.tip ? '<p class="callout">' + rich(x.tip) + '</p>' : '') + '</div></div>';
+    }).join('') + '</div>');
+    if (who.note) h.push('<p class="group-note">' + rich(who.note) + '</p>');
+    h.push('</section>');
+  }
+
+  // Photos: yours from site.json first, then visitors' (removable), then the add button.
+  var gal = S.gallery;
+  if (gal) {
+    var mine = list(gal.photos).filter(hasPhoto), ups = gal.uploads === false ? [] : UPLOADS.filter(function(u){ return !u.slot; });
+    h.push('<section id="photos"><h2>' + esc(gal.title || 'Photos') + '</h2>' + (gal.intro ? '<p class="note">' + rich(gal.intro) + '</p>' : '') + '<div class="gallery">' +
+      mine.map(function(f){ return tile(f, 'photos/' + encodeURIComponent(f), gal.owner || '', null); }).join('') +
+      ups.map(function(u){ return tile(u.file, 'uploads/' + u.file, u.name, u.id); }).join('') +
+      (gal.uploads === false ? '' : '<button class="add-photo" id="addPhotos"' + (uploading ? ' disabled' : '') + '>' + (uploading === true ? 'Uploading…' : '<b>+</b>Add your photos') + '</button>') +
+      '</div>' + (!mine.length && gal.uploads === false ? '<div class="empty">No photos yet.</div>' : '') + '</section>');
+  }
+
+  // What a visit involves: numbered steps; a step can carry a task's "last done" line and button.
+  var visit = S.visit || {};
+  if (list(visit.steps).length || list(S.info).length) {
+    h.push('<section id="visit"><h2>' + esc(visit.title || 'What a visit involves') + '</h2>' + (visit.duration ? '<p class="note">' + rich(visit.duration) + '</p>' : ''));
+    if (list(visit.steps).length) h.push('<ol class="steps">' + visit.steps.map(function(s){
+      if (typeof s === 'string') return '<li>' + rich(s) + '</li>';
+      var t = s.task && (findTask(s.task) || {id: s.task, label: s.text, every: 1}), out = '<li>' + rich(s.text);
+      if (t) {
+        var st = taskStatus(t);
+        out += '<span class="last">' + esc(st.last ? 'Last done ' + dayWord(st.last.date) + ' by ' + st.last.name : 'Not done yet') +
+          ' <button class="btn small' + (st.due ? '' : ' ghost') + '" data-task="' + esc(t.id) + '">' + (st.due ? 'Done' : 'Update') + '</button></span>';
+      }
+      return out + '</li>';
+    }).join('') + '</ol>');
+    // Info cards: getting in, where things are... A card with photoSlot lets visitors add a photo.
+    if (list(S.info).length) h.push('<div class="facts">' + S.info.map(function(c){
+      var pic = '';
+      if (hasPhoto(c.photo)) pic = '<a class="fact-pic" href="photos/' + encodeURIComponent(c.photo) + '" target="_blank" rel="noopener">' + img(c.photo, c.label) + '</a>';
+      var up = c.photoSlot ? UPLOADS.filter(function(u){ return u.slot === c.photoSlot; }).pop() : null;
+      if (up) pic = '<div class="fact-pic"><a href="uploads/' + up.file + '" target="_blank" rel="noopener"><img src="uploads/' + up.file + '" alt="' + esc(c.label) + '" loading="lazy"></a>' +
+        (up.name ? '<span class="pill by">' + esc(up.name) + '</span>' : '') + '<button class="rm" data-photo="' + up.id + '" aria-label="Remove this photo" title="Remove">×</button></div>';
+      return '<div class="fact">' + pic + '<span class="k">' + esc(c.label) + '</span>' + list(c.lines).map(function(l){ return '<span>' + rich(l) + '</span>'; }).join('') +
+        (c.highlight ? '<p class="callout">' + rich(c.highlight) + '</p>' : '') +
+        (c.photoSlot ? '<button class="btn small ghost slot-add" data-slot="' + esc(c.photoSlot) + '"' + (uploading ? ' disabled' : '') + '>' + (uploading === c.photoSlot ? 'Uploading…' : up ? 'Replace photo' : '+ Add a photo') + '</button>' : '') + '</div>';
+    }).join('') + '</div>');
+    h.push('</section>');
+  }
+
+  // Tips: cards of bullet or numbered lists (handling, walking, house rules...).
+  var tips = S.tips || {};
+  if (list(tips.cards).length) {
+    h.push('<section id="tips"><h2>' + esc(tips.title || 'Good to know') + '</h2><div class="facts">' + tips.cards.map(function(x){
+      var tag = x.ordered ? 'ol' : 'ul';
+      return '<div class="fact"><span class="k">' + esc((x.icon ? x.icon + ' ' : '') + x.title) + '</span><' + tag + '>' + list(x.items).map(function(i){ return '<li>' + rich(i) + '</li>'; }).join('') + '</' + tag + '>' +
+        (x.note ? '<p class="callout">' + rich(x.note) + '</p>' : '') + '</div>';
+    }).join('') + '</div></section>');
+  }
+
+  // Care cards: facts at a glance, tasks to sign off, and a folded how-to.
+  if (careCards().length) {
+    h.push('<section id="care"><h2>' + esc(S.care.title || 'Care') + '</h2><div class="care">');
+    careCards().forEach(function(c){
+      h.push('<div class="care-card">' + (hasPhoto(c.photo) ? '<a class="care-pic" href="photos/' + encodeURIComponent(c.photo) + '" target="_blank" rel="noopener">' + img(c.photo, c.title) + (c.credit ? '<span class="pill">' + esc(c.credit) + '</span>' : '') + '</a>' : '') +
+        '<div class="care-h">' + (c.icon ? '<span class="care-i" aria-hidden="true">' + esc(c.icon) + '</span>' : '') + '<div><h3>' + esc(c.title) + '</h3>' + (c.subtitle ? '<span class="ro">' + esc(c.subtitle) + '</span>' : '') + '</div></div>');
+      if (list(c.facts).length) h.push('<dl>' + c.facts.map(function(r){ return '<dt>' + esc(r[0]) + '</dt><dd' + (r[1] ? '' : ' class="tbd"') + '>' + (r[1] ? rich(r[1]) : 'To be added') + '</dd>'; }).join('') + '</dl>');
+      list(c.tables).forEach(function(r){
+        h.push(fold(c.title + ': ' + r[0], r[0], '<table class="tbl">' + list(r[1]).map(function(x){ return '<tr><th>' + esc(x[0]) + '</th><td>' + rich(x[1]) + '</td></tr>'; }).join('') + '</table>'));
+      });
+      list(c.tasks).forEach(function(t){
+        var st = taskStatus(t), log = CHORES.filter(function(x){ return x.task === t.id; });
+        h.push('<div class="chore-box"><div class="chore' + (st.due ? ' due' : '') + '"><div class="chore-t"><b>' + esc(t.label) + '</b>' + (t.when ? '<span class="when">' + esc(t.when) + '</span>' : '') +
+          st.lines.map(function(l){ return '<span class="chore-s">' + esc(l) + '</span>'; }).join('') + '</div>' +
+          '<button class="btn small' + (st.due ? '' : ' ghost') + '" data-task="' + esc(t.id) + '" aria-label="' + esc(t.label) + ': sign off">Done</button></div>' +
+          (log.length ? '<details class="hist" data-fold="hist:' + esc(t.id) + '"' + (foldOpen['hist:' + t.id] ? ' open' : '') + '><summary>History (' + log.length + ')</summary><ul class="log">' +
+            log.map(function(x){ return '<li><span>' + esc(fmtShort(parseDate(x.date))) + ' · ' + esc(x.name) + '</span><button class="unlog" data-log="' + x.id + '" aria-label="Remove this sign-off" title="Remove">×</button></li>'; }).join('') + '</ul></details>' : '') + '</div>');
+      });
+      if (list(c.steps).length || c.video || c.note)
+        h.push(fold(c.title, c.stepsTitle || 'How to',
+          (list(c.steps).length ? '<ol>' + c.steps.map(function(x){ return '<li>' + rich(x) + '</li>'; }).join('') + '</ol>' : '') +
+          (c.video && /^https:\/\//.test(c.video.url) ? '<p class="video"><a href="' + esc(c.video.url) + '" target="_blank" rel="noopener">▶ ' + esc(c.video.label || 'Watch the video') + '</a></p>' : '') +
+          (c.note ? '<p class="callout">' + rich(c.note) + '</p>' : '')));
+      h.push('</div>');
+    });
+    h.push('</div></section>');
+  }
+
+  // Schedule: whole weeks, Sunday first, listing each day's helpers.
+  if (S.schedule !== false) {
+    h.push('<section id="schedule"><h2>' + esc((S.schedule || {}).title || 'Schedule') + '</h2>');
+    if (!ds.length) h.push('<div class="empty">Dates not set yet.</div>');
+    else {
+      h.push('<div class="legend"><span><i class="dot open"></i>No one yet</span><span><i class="dot taken"></i>Covered</span><span><i class="dot sel"></i>Your picks</span></div>');
+      var first = ds[0], last = ds[ds.length - 1], todayKey = today();
+      var from = new Date(first); from.setDate(from.getDate() - from.getDay());
+      var to = new Date(last); to.setDate(to.getDate() + 6 - to.getDay());
+      h.push('<div class="cal-title">' + MONTHS[first.getMonth()] + (first.getMonth() !== last.getMonth() ? ' – ' + MONTHS[last.getMonth()] : '') + ' ' + last.getFullYear() + '</div>');
+      h.push('<div class="cal-head" aria-hidden="true">' + DOW.map(function(w){ return '<span>' + w + '</span>'; }).join('') + '</div><div class="cal">');
+      for (var d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+        var k = iso(d), out = d < first || d > last, showMon = d.getDate() === 1 || +d === +first;
+        var dn = '<span class="dn">' + (showMon ? MON[d.getMonth()] + ' ' : '') + d.getDate() + '</span>';
+        if (out) { h.push('<div class="cal-day out">' + dn + '</div>'); continue; }
+        var rs = resOn(k), picked = !!sel[k];
+        h.push('<div class="cal-day' + (k === todayKey ? ' today' : '') + '">' + dn);
+        rs.forEach(function(r){
+          h.push('<button class="res" data-id="' + r.id + '" title="Change or remove" aria-label="' + esc(fmtShort(d) + ', ' + timeLabel(r.time) + ': ' + r.name) + '">' +
+            '<small><span class="full">' + esc(timeLabel(r.time)) + '</span><span class="short">' + esc(timeShort(r.time)) + '</span></small>' +
+            '<span class="nm full">' + esc(r.name) + '</span><span class="nm short">' + esc(r.name.split(/\s+/)[0]) + '</span></button>');
+        });
+        // Empty days get a big "Open" target; covered days a small "+" to add another helper.
+        h.push('<button class="add' + (picked ? ' sel' : rs.length ? ' more' : ' open') + '" data-date="' + k + '" aria-pressed="' + picked + '" aria-label="' + esc(fmtShort(d) + ': ' + (picked ? 'picked' : rs.length ? 'add another visit' : 'open')) + '">' +
+          (picked ? 'Picked' : rs.length ? '+' : 'Open') + '</button></div>');
+      }
+      h.push('</div>');
+    }
+    h.push('</section>');
+  }
+  h.push('</div>');
+
+  var n = Object.keys(sel).length;
+  if (n) h.push('<div class="bar"><div class="in"><span><b>' + n + '</b> day' + (n > 1 ? 's' : '') + ' picked</span><span class="actions"><button class="btn ghost" id="clearSel">Clear</button><button class="btn" id="reserve">Sign up</button></span></div></div>');
+  app.innerHTML = h.join('');
+  if (modal) app.appendChild(modal);
+}
+
+function tile(file, src, by, uploadId){
+  var n = COMMENTS.filter(function(c){ return c.photo === file; }).length;
+  return '<div class="tile"><a href="' + esc(src) + '" data-view="' + esc(file) + '" data-by="' + esc(by) + '"><img src="' + esc(src) + '" alt="Photo' + (by ? ' from ' + esc(by) : '') + '" loading="lazy"></a>' +
+    (n && S.gallery.comments !== false ? '<span class="pill cc">💬 ' + n + '</span>' : '') + (by ? '<span class="pill by">' + esc(by) + '</span>' : '') +
+    (uploadId ? '<button class="rm" data-photo="' + uploadId + '" aria-label="Remove this photo" title="Remove">×</button>' : '') + '</div>';
+}
+
+// ---- dialogs ----
+function openModal(html, cls){ modal = document.createElement('div'); modal.className = 'modal'; modal.innerHTML = '<div class="card' + (cls ? ' ' + cls : '') + '" role="dialog" aria-modal="true">' + html + '</div>'; app.appendChild(modal); var f = !cls && modal.querySelector('input,textarea'); if (f) f.focus(); }
+function closeModal(){ var wasViewing = viewing; if (modal) modal.remove(); modal = null; editing = null; viewing = null; replyTo = null; if (wasViewing) render(); }
+function toast(msg){ var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2200); }
+function nameField(id, label){ return '<div class="field"><label for="' + id + '">' + (label || 'Your name') + '</label><input id="' + id + '" value="' + esc(visitor.name) + '" autocomplete="name" maxlength="60"></div>'; }
+
+function reserveForm(){
+  var picked = Object.keys(sel).sort().map(function(k){ return fmtShort(parseDate(k)); });
+  openModal('<h3>Sign up for ' + picked.length + ' day' + (picked.length > 1 ? 's' : '') + '</h3><div class="picked">' + picked.map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' +
+    '<div class="row">' + nameField('w_name') + '<div class="field"><label for="w_time">Roughly when</label><select id="w_time">' + timeOptions(visitor.time || times()[times().length - 1]) + '</select></div></div>' +
+    (picked.length > 1 ? '<p class="ro">Same time for each day.</p>' : '') +
+    '<div class="actions"><button class="btn ghost" id="m_cancel">Cancel</button><button class="btn" id="w_reserve">Sign up</button></div>');
+}
+function editForm(id){
+  var r = RES.filter(function(x){ return x.id === id; })[0]; if (!r) return;
+  editing = r;
+  openModal('<h3>' + esc(fmtShort(parseDate(r.date))) + '</h3>' +
+    '<div class="row"><div class="field"><label for="e_name">Name</label><input id="e_name" value="' + esc(r.name) + '" maxlength="60"></div>' +
+    '<div class="field"><label for="e_time">Roughly when</label><select id="e_time">' + timeOptions(r.time) + '</select></div></div>' +
+    '<div class="actions"><button class="btn danger" id="e_remove">Remove</button><button class="btn ghost" id="m_cancel">Cancel</button><button class="btn" id="e_save">Save</button></div>');
+}
+function taskForm(id){
+  var t = findTask(id) || {id: id, label: 'Done'};
+  editing = t;
+  openModal('<h3>' + esc(t.label) + '</h3><div class="row">' + nameField('c_name') +
+    '<div class="field"><label for="c_date">Done on</label><input id="c_date" type="date" value="' + today() + '" max="' + today() + '"></div></div>' +
+    '<div class="actions"><button class="btn ghost" id="m_cancel">Cancel</button><button class="btn" id="c_save">Sign off</button></div>');
+}
+
+// ---- photo viewer with comments and replies ----
+function when(s){
+  var d = new Date(String(s).replace(' ', 'T') + 'Z'); if (isNaN(d)) return '';
+  try { var w = dayWord(dayKey(d)), t = new Intl.DateTimeFormat('en-US', {timeZone: tz(), hour: 'numeric', minute: '2-digit'}).format(d);
+    return (w === 'today' || w === 'yesterday' ? w.charAt(0).toUpperCase() + w.slice(1) : w) + ', ' + t; } catch(e){ return ''; }
+}
+function commentForm(){
+  var to = replyTo ? COMMENTS.filter(function(c){ return c.id === replyTo; })[0] : null;
+  return '<div class="cform"><div class="field"><label for="k_body">' + (to ? 'Reply to ' + esc(to.name) : 'Add a comment') + '</label><textarea id="k_body" maxlength="1000" rows="2"></textarea></div>' + nameField('k_name') +
+    '<div class="actions">' + (to ? '<button class="btn small ghost" id="k_cancel">Cancel reply</button>' : '<span></span>') + '<button class="btn small" id="k_post">' + (to ? 'Reply' : 'Post') + '</button></div></div>';
+}
+function commentTree(cs, parent){
+  return cs.filter(function(c){ return c.parent === parent; }).map(function(c){
+    var kids = commentTree(cs, c.id);
+    return '<div class="cmt"><div class="meta"><b>' + esc(c.name) + '</b><small>' + esc(when(c.created_at)) + '</small></div><p>' + esc(c.body) + '</p>' +
+      '<div class="cacts"><button class="reply" data-reply="' + c.id + '">Reply</button><button data-uncomment="' + c.id + '">Remove</button></div>' +
+      (replyTo === c.id ? commentForm() : '') + (kids ? '<div class="replies">' + kids + '</div>' : '') + '</div>';
+  }).join('');
+}
+function viewerHtml(){
+  var v = viewing, cs = COMMENTS.filter(function(c){ return c.photo === v.file; }), on = S.gallery.comments !== false;
+  return '<a class="big" href="' + esc(v.src) + '" target="_blank" rel="noopener"><img src="' + esc(v.src) + '" alt="Photo' + (v.by ? ' from ' + esc(v.by) : '') + '"></a>' +
+    '<div class="vhead"><span>' + (v.by ? 'From ' + esc(v.by) : '') + '</span><a href="' + esc(v.src) + '" target="_blank" rel="noopener">Full size ↗</a></div>' +
+    (on ? '<h3>Comments' + (cs.length ? ' (' + cs.length + ')' : '') + '</h3><div class="comments">' + (cs.length ? commentTree(cs, null) : '<p class="note">No comments yet.</p>') + '</div>' + (replyTo ? '' : commentForm()) : '') +
+    '<div class="actions"><button class="btn ghost" id="m_cancel">Close</button></div>';
+}
+// Redraw the open viewer in place, keeping what the visitor has typed, their cursor and scroll position.
+function showViewer(focus){
+  if (!modal) { openModal(viewerHtml(), 'viewer'); return; }
+  var card = modal.firstChild, b = document.getElementById('k_body'), n = document.getElementById('k_name');
+  var draft = b ? b.value : '', nm = n ? n.value : null, top = card.scrollTop, act = document.activeElement;
+  var actId = act && card.contains(act) ? act.id : '', range = act && act.selectionStart != null ? [act.selectionStart, act.selectionEnd] : null;
+  card.innerHTML = viewerHtml(); card.scrollTop = top;
+  b = document.getElementById('k_body'); n = document.getElementById('k_name');
+  if (b) b.value = draft; if (n && nm !== null) n.value = nm;
+  if (focus && b) { b.focus(); b.scrollIntoView({block: 'nearest'}); return; }
+  var back = actId && document.getElementById(actId); if (back) { back.focus({preventScroll: true}); if (range) try { back.setSelectionRange(range[0], range[1]); } catch(e){} }
+}
+function postComment(){
+  var b = document.getElementById('k_body'), n = document.getElementById('k_name'), body = b.value.trim(), nm = n.value.trim();
+  if (!body) { b.focus(); toast('Write something first'); return; }
+  if (!nm) { n.focus(); toast('Add your name first'); return; }
+  visitor.name = nm; remember();
+  var btn = document.getElementById('k_post'); btn.disabled = true; btn.textContent = 'Posting…';
+  send('POST', 'api/comments', {photo: viewing.file, parent: replyTo, name: nm, body: body}).then(function(res){
+    if (!res.ok && res.j.error === 'no_photo') { closeModal(); toast('That photo was removed'); return; }
+    if (!res.ok && res.j.error === 'gone') { replyTo = null; showViewer(true); toast('That comment was removed'); return; }
+    if (!res.ok) throw new Error();
+    replyTo = null; b.value = ''; showViewer(); toast('Posted');
+  }).catch(function(){ btn.disabled = false; btn.textContent = replyTo ? 'Reply' : 'Post'; toast('Could not post. Try again.'); });
+}
+
+// ---- talking to the server ----
+function applyServer(st){ if (!st || !st.reservations) return; RES = st.reservations; PHOTOS = st.photos || []; UPLOADS = st.uploads || []; CHORES = st.chores || []; COMMENTS = st.comments || []; }
+function send(method, url, body){
+  return fetch(url, {method: method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined})
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ applyServer(j); return {ok: r.ok, status: r.status, j: j}; }); });
+}
+// Send one change from a dialog; on success close it and redraw.
+function save(method, url, body, btnId, label, done){
+  var btn = document.getElementById(btnId); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  send(method, url, body).then(function(res){
+    if (res.status === 404) { closeModal(); render(); toast('Someone else already removed that'); return; }
+    if (!res.ok) throw new Error();
+    if (done) done();
+    closeModal(); render(); toast('Saved');
+  }).catch(function(){ if (btn) { btn.disabled = false; btn.textContent = label; } toast('Could not save. Try again.'); });
+}
+function remove(url, what){
+  if (!confirm('Remove this ' + what + '?')) return;
+  send('DELETE', url).then(function(){ if (viewing) showViewer(); else render(); toast('Removed'); }, function(){ toast('Could not remove. Try again.'); });
+}
+function loadState(){ return fetch('api/state').then(function(r){ return r.json(); }).then(function(st){ applyServer(st); if (!modal) render(); }).catch(function(){}); }
+
+// ---- events ----
+app.addEventListener('click', function(ev){
+  var t = ev.target.closest('button, a'); if (!t) return;
+  var id = t.id, a = function(n){ return t.getAttribute(n); };
+  if (a('data-view')) { ev.preventDefault(); viewing = {file: a('data-view'), src: a('href'), by: a('data-by')}; replyTo = null; showViewer(); return; }
+  if (a('data-reply')) { replyTo = +a('data-reply'); showViewer(true); return; }
+  if (a('data-uncomment')) {
+    var kids = COMMENTS.some(function(c){ return c.parent === +a('data-uncomment'); });
+    if (!confirm(kids ? 'Remove this comment and its replies?' : 'Remove this comment?')) return;
+    send('DELETE', 'api/comments/' + a('data-uncomment')).then(function(){ if (replyTo && !COMMENTS.some(function(c){ return c.id === replyTo; })) replyTo = null; showViewer(); toast('Removed'); }, function(){ toast('Could not remove. Try again.'); });
+    return;
+  }
+  if (a('data-date')) { var k = a('data-date'); if (sel[k]) delete sel[k]; else sel[k] = true; render(); return; }
+  if (a('data-id')) { editForm(+a('data-id')); return; }
+  if (a('data-task')) { taskForm(a('data-task')); return; }
+  if (a('data-log')) { remove('api/chores/' + a('data-log'), 'sign-off'); return; }
+  if (a('data-photo')) { remove('api/photos/' + a('data-photo'), 'photo'); return; }
+  if (a('data-slot')) { photoSlot = a('data-slot'); photoInput.multiple = false; photoInput.value = ''; photoInput.click(); return; }
+  if (id === 'addPhotos') { photoSlot = ''; photoInput.multiple = true; photoInput.value = ''; photoInput.click(); return; }
+  if (id === 'k_cancel') { replyTo = null; showViewer(); return; }
+  if (id === 'k_post') { postComment(); return; }
+  if (id === 'clearSel') { sel = {}; render(); }
+  else if (id === 'reserve') reserveForm();
+  else if (id === 'm_cancel') closeModal();
+  else if (id === 'w_reserve') {
+    var nm = document.getElementById('w_name').value.trim(), tm = document.getElementById('w_time').value;
+    if (!nm) { document.getElementById('w_name').focus(); toast('Add your name first'); return; }
+    visitor = {name: nm, time: tm}; remember();
+    save('POST', 'api/reservations', {dates: Object.keys(sel), name: nm, time: tm}, 'w_reserve', 'Sign up', function(){ sel = {}; });
+  }
+  else if (id === 'e_save') {
+    var en = document.getElementById('e_name').value.trim();
+    if (!en) { document.getElementById('e_name').focus(); toast('Add a name, or press Remove'); return; }
+    save('PUT', 'api/reservations/' + editing.id, {name: en, time: document.getElementById('e_time').value}, 'e_save', 'Save');
+  }
+  else if (id === 'e_remove') save('DELETE', 'api/reservations/' + editing.id, null, 'e_remove', 'Remove');
+  else if (id === 'c_save') {
+    var cn = document.getElementById('c_name').value.trim(), cd = document.getElementById('c_date').value;
+    if (!cn) { document.getElementById('c_name').focus(); toast('Add your name first'); return; }
+    if (!parseDate(cd)) { document.getElementById('c_date').focus(); toast('Pick a date'); return; }
+    visitor.name = cn; remember();
+    save('POST', 'api/chores', {task: editing.id, date: cd, name: cn}, 'c_save', 'Sign off');
+  }
+});
+// 'toggle' doesn't bubble, so listen in the capture phase.
+app.addEventListener('toggle', function(ev){ var k = ev.target.getAttribute && ev.target.getAttribute('data-fold'); if (k) foldOpen[k] = ev.target.open; }, true);
+document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape' && modal) closeModal(); });
+
+// The file picker lives outside #app so re-renders can't detach it mid-pick.
+var photoInput = document.createElement('input');
+photoInput.type = 'file'; photoInput.accept = 'image/*'; photoInput.hidden = true;
+document.body.appendChild(photoInput);
+photoInput.addEventListener('change', function(){
+  var files = Array.prototype.slice.call(photoInput.files || []);
+  if (!files.length) return;
+  if (files.length > 10) { toast('Up to 10 at a time'); files = files.slice(0, 10); }
+  var big = files.filter(function(f){ return f.size > 25 * 1024 * 1024; }).length;
+  files = files.filter(function(f){ return f.size <= 25 * 1024 * 1024; });
+  if (!files.length) { toast('Too big (25 MB max)'); return; }
+  var fd = new FormData();
+  files.forEach(function(f){ fd.append('photos', f); });
+  fd.append('name', visitor.name || '');
+  var slot = photoSlot; if (slot) fd.append('slot', slot);
+  uploading = slot || true; render();
+  fetch('api/photos', {method: 'POST', body: fd}).then(function(r){ return r.json(); }).then(function(st){
+    applyServer(st);
+    var bad = (st.failed || 0) + big, ok = files.length + big - bad;
+    toast(ok ? 'Added ' + ok + ' photo' + (ok > 1 ? 's' : '') + (bad ? '; ' + bad + ' could not be used' : '') : 'Could not use ' + (bad > 1 ? 'those files' : 'that file'));
+  }, function(){ toast('Upload failed. Try again.'); }).then(function(){ uploading = false; render(); });
+});
+
+// ---- start: read site.json, then the shared state; refresh so others' changes show up ----
+fetch('site.json', {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(txt){
+  try { S = JSON.parse(txt); }
+  catch (e) {
+    // Point at the line with the mistake, since site.json is edited by hand.
+    var m = /position (\d+)/.exec(e.message), line = m ? txt.slice(0, +m[1]).split('\n').length : 0;
+    app.innerHTML = '<div class="oops"><h2>site.json has a mistake</h2><p>' + (line ? 'Look at <b>line ' + line + '</b> or just above it. ' : '') + 'Common causes: a missing comma between items, a comma after the last item, or a missing quote.</p><pre>' + esc(e.message) + '</pre></div>';
+    return;
+  }
+  render(); loadState();
+  setInterval(function(){ if (!document.hidden && !modal) loadState(); }, 30000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden && !modal) loadState(); });
+  // While a photo is open, pull in new comments every few seconds so the thread stays live.
+  setInterval(function(){
+    if (!viewing || document.hidden) return;
+    var mine = function(){ return JSON.stringify(COMMENTS.filter(function(c){ return viewing && c.photo === viewing.file; })); }, before = mine();
+    fetch('api/state').then(function(r){ return r.json(); }).then(function(st){
+      if (!viewing) return;
+      applyServer(st);
+      if (replyTo && !COMMENTS.some(function(c){ return c.id === replyTo; })) replyTo = null;
+      if (mine() !== before) showViewer();
+    }).catch(function(){});
+  }, 4000);
+});
+})();
+</script>
+</body>
+</html>
