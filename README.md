@@ -11,7 +11,8 @@ Helpers can:
 - **Add photos** to a shared gallery, and **comment and reply** on them (comments show up live)
 - Read everything they need to know: who's who, what a visit involves, where things are, how-tos
 
-You change everything (words, pets, tasks, dates) in **one file, `site.json`**. No coding needed.
+You change everything (words, pets, tasks, dates, photos) right on the page with **Edit this page**,
+or by hand in **one file, `site.json`**. No coding needed.
 
 ![The example site: a welcome note, cards for each pet and plant, a shared photo gallery, visit steps, care cards with tasks, and a sign-up calendar.](docs/screenshot.png)
 
@@ -43,6 +44,23 @@ To use a different port: `PORT=8080 bun server.js`.
 ---
 
 ## Make it yours
+
+### On the page
+
+Tap **✏️ Edit this page** at the bottom. Every section then gets:
+
+- **✏️ Edit**: a form with every field in that section. Upload a photo for any photo field,
+  and add, reorder (↑ ↓) or remove items in any list: cards, steps, lines, facts, tasks, rows…
+- **↑ ↓**: move the whole section up or down the page.
+
+Empty sections still show in edit mode so you can fill them in, and **+ Add a section** at the
+bottom adds one of your own (a heading, photo, paragraphs, a list and a note). Changes save
+straight into `site.json`, for everyone. Photos you upload go into `photos/`.
+
+To require a password for editing, start the server with one:
+`EDIT_PASSWORD=something bun server.js`. Without it, anyone who can open the page can edit it.
+
+### By hand
 
 1. **Edit `site.json`** in any text editor.
 2. **Save, then refresh the page.** No restart needed.
@@ -218,6 +236,18 @@ replace) one photo on that card, useful for "where is the vacuum?".
 | `every` | How often in days. The task turns highlighted when it's due. Leave out for "as needed" tasks |
 | `flag` | `{ "since": "2026-12-03", "text": "Full now: please empty it" }` marks it as needing doing now, until someone ticks it off on or after that day |
 
+### `extra` and `order`: your own sections, and the order of sections
+
+```json
+"extra": [
+  { "id": "rules", "title": "House rules", "photo": "door.jpg", "text": ["A paragraph."], "items": ["Shoes off inside"], "ordered": false, "note": "Thanks!" }
+],
+"order": ["who", "extra:rules", "gallery", "visit", "tips", "care", "schedule"]
+```
+
+`extra` holds sections you add yourself. `order` lists the sections from top to bottom (yours as
+`extra:` plus its `id`); any left out go at the end. Edit mode writes both for you.
+
 ### `schedule`: the calendar
 
 ```json
@@ -244,6 +274,7 @@ color) and `--bg` (the page background) for a quick new look.
 The page has **no logins**: anyone who can open it can sign up, tick off tasks, add photos,
 comment and remove things. That keeps it simple for helpers, so:
 
+- **Set `EDIT_PASSWORD`** so only you can change the page itself (see *Make it yours*).
 - **Only share it with people you trust.** Put it behind something that limits who can open
   it (a private network such as Tailscale, a password-protecting proxy, or your hosting
   provider's access controls).
@@ -264,7 +295,7 @@ GitHub. Back it up if you care about it; delete it to start fresh.
 
 | File | What it is |
 |---|---|
-| `site.json` | **Your content.** The only file most people need to touch |
+| `site.json` | **Your content.** Edit it on the page or by hand |
 | `photos/` | Your photos |
 | `index.html` | The page (layout, look, behavior) |
 | `server.js` | The small server that saves what helpers add |

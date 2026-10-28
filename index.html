@@ -211,6 +211,51 @@ table.tbl{border-collapse:collapse;font-variant-numeric:tabular-nums}
 @media (max-width:440px){.row{grid-template-columns:1fr}}
 .picked{display:flex;flex-wrap:wrap;gap:.35rem}
 .picked span{background:var(--sel-soft);color:var(--sel);border-radius:8px;padding:.2rem .55rem;font-size:.9rem;font-weight:600}
+
+/* Edit mode */
+.extra-box{margin-top:.75rem}
+.ed-banner{position:sticky;top:0;z-index:25;margin:0 auto;max-width:720px;display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;background:var(--fg);color:var(--bg);border-radius:0 0 16px 16px;padding:.55rem .9rem;font-size:.92rem}
+.ed-banner .btn{border-color:var(--bg);background:var(--bg);color:var(--fg);box-shadow:none}
+.ed-top{display:flex;justify-content:flex-end}
+.ed-st{margin-left:auto;display:inline-flex;gap:.3rem;align-items:center;font-family:var(--body)}
+.ed-st .mv{appearance:none;width:2rem;height:2rem;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;font-size:.9rem}
+.ed-st .mv[disabled]{opacity:.35;cursor:default}
+.stub{border:2px dashed var(--line);border-radius:20px;padding:1rem 1.1rem;margin-top:1.75rem}
+.stub h2{margin-bottom:.2rem}
+.ed-add-sec{width:100%;margin-top:1.75rem;padding:.9rem}
+.foot{text-align:center;padding-top:2.5rem}
+.linkish{appearance:none;border:0;background:none;font:inherit;font-size:.9rem;color:var(--muted);cursor:pointer;text-decoration:underline}
+.editor{max-width:640px}
+.ed-obj{display:grid;gap:.75rem;margin:0;padding:0;border:0;min-width:0}
+fieldset.ed-obj.boxed{border:1px solid var(--line);border-radius:14px;padding:.7rem}
+.ed-obj legend{font-weight:800;font-size:.9rem;padding:0 .3rem}
+.ed-hint{font-size:.8rem;color:var(--muted);font-weight:400}
+.ed-check{display:flex;gap:.5rem;align-items:center;font-weight:700;font-size:.9rem}
+.ed-check input{width:1.15rem;height:1.15rem;accent-color:var(--ink)}
+.ed-list{display:grid;gap:.45rem}
+.ed-lh{display:grid;gap:.1rem}
+.ed-lh b{font-size:.9rem}
+.ed-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.4rem;align-items:start}
+.ed-row .row{align-items:start;gap:.4rem}
+.ed-item{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:.6rem;display:grid;gap:.6rem}
+.ed-item .field input,.ed-item .field textarea,.ed-item .field select{background:var(--surface)}
+details.ed-item>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.4rem;font-weight:700;min-width:0}
+details.ed-item>summary::-webkit-details-marker{display:none}
+details.ed-item>summary::before{content:"▸";color:var(--ink);transition:transform .15s}
+details.ed-item[open]>summary::before{transform:rotate(90deg)}
+details.ed-item>summary>span:first-of-type{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-bar{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:700;color:var(--muted)}
+.ed-tools{display:inline-flex;gap:.2rem;flex:none}
+.ed-tools button{appearance:none;width:1.9rem;height:1.9rem;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;font-size:.85rem;line-height:1}
+.ed-tools button[disabled]{opacity:.35;cursor:default}
+.ed-tools .del{color:var(--danger)}
+.ed-plus{justify-self:start}
+.ed-photo{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.ed-photo img{width:4.5rem;height:4.5rem;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.ed-photo .none{width:4.5rem;height:4.5rem;border-radius:10px;border:1.5px dashed var(--line);display:grid;place-items:center;font-size:.72rem;color:var(--muted);text-align:center}
+.ed-photo select{font:inherit;font-size:.85rem;padding:.35rem .5rem;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);max-width:12rem}
+.ed-actions{position:sticky;bottom:-1.25rem;margin:0 -1.25rem -1.25rem;padding:.75rem 1.25rem;background:var(--surface);border-top:1px solid var(--line);z-index:1}
+.ed-actions .danger{margin-right:auto}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:.5rem .9rem;border-radius:999px;font-weight:700;z-index:40;max-width:calc(100% - 32px)}
 </style>
 </head>
@@ -287,21 +332,67 @@ function taskStatus(t){
 }
 
 // ---- the page ----
+// Sections appear in site.json's "order", then any it leaves out. Sections you add yourself
+// live in "extra" and are named "extra:<id>" in the order.
+var BUILT = ['who', 'gallery', 'visit', 'tips', 'care', 'schedule'];
+function extraId(x, i){ return x && x.id ? String(x.id) : 'x' + i; }
+function order(){
+  var keys = BUILT.concat(list(S.extra).map(extraId)), out = [];
+  keys = keys.map(function(k, i){ return i < BUILT.length ? k : 'extra:' + k; });
+  list(S.order).forEach(function(k){ if (keys.indexOf(k) >= 0 && out.indexOf(k) < 0) out.push(k); });
+  keys.forEach(function(k){ if (out.indexOf(k) < 0) out.push(k); });
+  return out;
+}
+// A section heading; in edit mode it carries buttons to move and edit the section.
+function secHead(key, title){
+  if (!editMode) return '<h2>' + esc(title) + '</h2>';
+  var o = order(), i = o.indexOf(key);
+  return '<h2>' + esc(title) + '<span class="ed-st"><button class="mv" data-sec-up="' + esc(key) + '"' + (i <= 0 ? ' disabled' : '') + ' aria-label="Move section up" title="Move up">↑</button>' +
+    '<button class="mv" data-sec-down="' + esc(key) + '"' + (i >= o.length - 1 ? ' disabled' : '') + ' aria-label="Move section down" title="Move down">↓</button>' +
+    '<button class="btn small ghost" data-edit="' + esc(key) + '">✏️ Edit</button></span></h2>';
+}
+
 function render(){
-  var ds = days(), h = ['<div class="wrap">'];
+  var ds = days(), h = [];
+  if (editMode) h.push('<div class="ed-banner"><span>✏️ <b>Edit mode.</b> Edit, move or add sections; changes save for everyone.</span><button class="btn small" id="ed_done">Done</button></div>');
+  h.push('<div class="wrap">');
 
   // Header: title (with one phrase highlighted), dates, welcome note.
   var title = S.title || 'Home Help', hl = S.highlight && title.indexOf(S.highlight) >= 0 ? S.highlight : '';
   document.title = title;
-  h.push('<header class="hero"><h1>' + (hl ? esc(title.slice(0, title.indexOf(hl))) + '<span class="hl">' + esc(hl) + '</span>' + esc(title.slice(title.indexOf(hl) + hl.length)) : esc(title)) + '</h1>');
+  h.push('<header class="hero">' + (editMode ? '<div class="ed-top"><button class="btn small ghost" data-edit="top">✏️ Edit title, dates &amp; welcome</button></div>' : '') +
+    '<h1>' + (hl ? esc(title.slice(0, title.indexOf(hl))) + '<span class="hl">' + esc(hl) + '</span>' + esc(title.slice(title.indexOf(hl) + hl.length)) : esc(title)) + '</h1>');
   if (ds.length) h.push('<div class="dates">🗓 ' + fmtLong(ds[0]) + ' – ' + fmtLong(ds[ds.length - 1]) + ' · ' + ds.length + ' day' + (ds.length > 1 ? 's' : '') + '</div>');
   if (list(S.welcome).length || S.signature) h.push('<div class="welcome">' + list(S.welcome).map(function(p){ return '<p>' + rich(p) + '</p>'; }).join('') + (S.signature ? '<p class="sig">' + esc(S.signature) + '</p>' : '') + '</div>');
   h.push('</header>');
 
+  order().forEach(function(k){
+    var out = SECTION_HTML[k] ? SECTION_HTML[k](ds) : /^extra:/.test(k) ? extraHtml(k) : '';
+    if (out) h.push(out);
+    else if (editMode) h.push(stub(k));
+  });
+  if (editMode) h.push('<button class="btn ghost ed-add-sec" id="ed_addsec">+ Add a section</button>');
+  else h.push('<footer class="foot"><button class="linkish" id="ed_enter">✏️ Edit this page</button></footer>');
+  h.push('</div>');
+
+  var n = Object.keys(sel).length;
+  if (n) h.push('<div class="bar"><div class="in"><span><b>' + n + '</b> day' + (n > 1 ? 's' : '') + ' picked</span><span class="actions"><button class="btn ghost" id="clearSel">Clear</button><button class="btn" id="reserve">Sign up</button></span></div></div>');
+  app.innerHTML = h.join('');
+  if (modal) app.appendChild(modal);
+}
+
+// In edit mode, a section with nothing in it still shows, so it can be filled in or moved.
+function stub(k){
+  var hidden = k === 'schedule' && S.schedule === false;
+  return '<section class="stub">' + secHead(k, (EDITORS[k] || {}).label || 'Section') + '<p class="note">' + (hidden ? 'Hidden from helpers.' : 'Not on the page yet. Tap Edit to fill it in.') + '</p></section>';
+}
+
+var SECTION_HTML = {
   // Who's who: pets, people, plants...
-  var who = S.who || {};
-  if (list(who.items).length) {
-    h.push('<section id="who"><h2>' + esc(who.title || 'Meet everyone') + '</h2>');
+  who: function(){
+    var who = S.who || {}, h = [];
+    if (!list(who.items).length) return '';
+    h.push('<section id="who">' + secHead('who', who.title || 'Meet everyone'));
     if (hasPhoto(who.photo)) h.push('<figure class="group">' + img(who.photo, 'Everyone together') + '</figure>');
     h.push('<div class="kgrid">' + who.items.map(function(x){
       return '<div class="kcard"><div class="pic">' + (hasPhoto(x.photo) ? img(x.photo, x.name) : '<div class="ph" aria-hidden="true">' + esc(x.emoji || '🏡') + '</div>') + '</div>' +
@@ -311,24 +402,26 @@ function render(){
         (x.tip ? '<p class="callout">' + rich(x.tip) + '</p>' : '') + '</div></div>';
     }).join('') + '</div>');
     if (who.note) h.push('<p class="group-note">' + rich(who.note) + '</p>');
-    h.push('</section>');
-  }
+    return h.join('') + '</section>';
+  },
 
   // Photos: yours from site.json first, then visitors' (removable), then the add button.
-  var gal = S.gallery;
-  if (gal) {
+  gallery: function(){
+    var gal = S.gallery;
+    if (!gal) return '';
     var mine = list(gal.photos).filter(hasPhoto), ups = gal.uploads === false ? [] : UPLOADS.filter(function(u){ return !u.slot; });
-    h.push('<section id="photos"><h2>' + esc(gal.title || 'Photos') + '</h2>' + (gal.intro ? '<p class="note">' + rich(gal.intro) + '</p>' : '') + '<div class="gallery">' +
+    return '<section id="photos">' + secHead('gallery', gal.title || 'Photos') + (gal.intro ? '<p class="note">' + rich(gal.intro) + '</p>' : '') + '<div class="gallery">' +
       mine.map(function(f){ return tile(f, 'photos/' + encodeURIComponent(f), gal.owner || '', null); }).join('') +
       ups.map(function(u){ return tile(u.file, 'uploads/' + u.file, u.name, u.id); }).join('') +
       (gal.uploads === false ? '' : '<button class="add-photo" id="addPhotos"' + (uploading ? ' disabled' : '') + '>' + (uploading === true ? 'Uploading…' : '<b>+</b>Add your photos') + '</button>') +
-      '</div>' + (!mine.length && gal.uploads === false ? '<div class="empty">No photos yet.</div>' : '') + '</section>');
-  }
+      '</div>' + (!mine.length && gal.uploads === false ? '<div class="empty">No photos yet.</div>' : '') + '</section>';
+  },
 
   // What a visit involves: numbered steps; a step can carry a task's "last done" line and button.
-  var visit = S.visit || {};
-  if (list(visit.steps).length || list(S.info).length) {
-    h.push('<section id="visit"><h2>' + esc(visit.title || 'What a visit involves') + '</h2>' + (visit.duration ? '<p class="note">' + rich(visit.duration) + '</p>' : ''));
+  visit: function(){
+    var visit = S.visit || {}, h = [];
+    if (!list(visit.steps).length && !list(S.info).length) return '';
+    h.push('<section id="visit">' + secHead('visit', visit.title || 'What a visit involves') + (visit.duration ? '<p class="note">' + rich(visit.duration) + '</p>' : ''));
     if (list(visit.steps).length) h.push('<ol class="steps">' + visit.steps.map(function(s){
       if (typeof s === 'string') return '<li>' + rich(s) + '</li>';
       var t = s.task && (findTask(s.task) || {id: s.task, label: s.text, every: 1}), out = '<li>' + rich(s.text);
@@ -350,22 +443,24 @@ function render(){
         (c.highlight ? '<p class="callout">' + rich(c.highlight) + '</p>' : '') +
         (c.photoSlot ? '<button class="btn small ghost slot-add" data-slot="' + esc(c.photoSlot) + '"' + (uploading ? ' disabled' : '') + '>' + (uploading === c.photoSlot ? 'Uploading…' : up ? 'Replace photo' : '+ Add a photo') + '</button>' : '') + '</div>';
     }).join('') + '</div>');
-    h.push('</section>');
-  }
+    return h.join('') + '</section>';
+  },
 
   // Tips: cards of bullet or numbered lists (handling, walking, house rules...).
-  var tips = S.tips || {};
-  if (list(tips.cards).length) {
-    h.push('<section id="tips"><h2>' + esc(tips.title || 'Good to know') + '</h2><div class="facts">' + tips.cards.map(function(x){
+  tips: function(){
+    var tips = S.tips || {};
+    if (!list(tips.cards).length) return '';
+    return '<section id="tips">' + secHead('tips', tips.title || 'Good to know') + '<div class="facts">' + tips.cards.map(function(x){
       var tag = x.ordered ? 'ol' : 'ul';
-      return '<div class="fact"><span class="k">' + esc((x.icon ? x.icon + ' ' : '') + x.title) + '</span><' + tag + '>' + list(x.items).map(function(i){ return '<li>' + rich(i) + '</li>'; }).join('') + '</' + tag + '>' +
+      return '<div class="fact"><span class="k">' + esc((x.icon ? x.icon + ' ' : '') + (x.title || '')) + '</span><' + tag + '>' + list(x.items).map(function(i){ return '<li>' + rich(i) + '</li>'; }).join('') + '</' + tag + '>' +
         (x.note ? '<p class="callout">' + rich(x.note) + '</p>' : '') + '</div>';
-    }).join('') + '</div></section>');
-  }
+    }).join('') + '</div></section>';
+  },
 
   // Care cards: facts at a glance, tasks to sign off, and a folded how-to.
-  if (careCards().length) {
-    h.push('<section id="care"><h2>' + esc(S.care.title || 'Care') + '</h2><div class="care">');
+  care: function(){
+    if (!careCards().length) return '';
+    var h = ['<section id="care">' + secHead('care', S.care.title || 'Care') + '<div class="care">'];
     careCards().forEach(function(c){
       h.push('<div class="care-card">' + (hasPhoto(c.photo) ? '<a class="care-pic" href="photos/' + encodeURIComponent(c.photo) + '" target="_blank" rel="noopener">' + img(c.photo, c.title) + (c.credit ? '<span class="pill">' + esc(c.credit) + '</span>' : '') + '</a>' : '') +
         '<div class="care-h">' + (c.icon ? '<span class="care-i" aria-hidden="true">' + esc(c.icon) + '</span>' : '') + '<div><h3>' + esc(c.title) + '</h3>' + (c.subtitle ? '<span class="ro">' + esc(c.subtitle) + '</span>' : '') + '</div></div>');
@@ -388,12 +483,13 @@ function render(){
           (c.note ? '<p class="callout">' + rich(c.note) + '</p>' : '')));
       h.push('</div>');
     });
-    h.push('</div></section>');
-  }
+    return h.join('') + '</div></section>';
+  },
 
   // Schedule: whole weeks, Sunday first, listing each day's helpers.
-  if (S.schedule !== false) {
-    h.push('<section id="schedule"><h2>' + esc((S.schedule || {}).title || 'Schedule') + '</h2>');
+  schedule: function(ds){
+    if (S.schedule === false) return '';
+    var h = ['<section id="schedule">' + secHead('schedule', (S.schedule || {}).title || 'Schedule')];
     if (!ds.length) h.push('<div class="empty">Dates not set yet.</div>');
     else {
       h.push('<div class="legend"><span><i class="dot open"></i>No one yet</span><span><i class="dot taken"></i>Covered</span><span><i class="dot sel"></i>Your picks</span></div>');
@@ -419,14 +515,20 @@ function render(){
       }
       h.push('</div>');
     }
-    h.push('</section>');
+    return h.join('') + '</section>';
   }
-  h.push('</div>');
+};
 
-  var n = Object.keys(sel).length;
-  if (n) h.push('<div class="bar"><div class="in"><span><b>' + n + '</b> day' + (n > 1 ? 's' : '') + ' picked</span><span class="actions"><button class="btn ghost" id="clearSel">Clear</button><button class="btn" id="reserve">Sign up</button></span></div></div>');
-  app.innerHTML = h.join('');
-  if (modal) app.appendChild(modal);
+// A section of your own: heading, photo, paragraphs, a list and a note.
+function extraHtml(k){
+  var xs = list(S.extra), i = xs.map(extraId).indexOf(k.slice(6)), x = xs[i];
+  if (!x) return '';
+  var tag = x.ordered ? 'ol' : 'ul', body = (hasPhoto(x.photo) ? '<figure class="group">' + img(x.photo, x.title || '') + '</figure>' : '') +
+    (list(x.text).length ? '<div class="fact extra-box">' + list(x.text).map(function(p){ return '<p>' + rich(p) + '</p>'; }).join('') + '</div>' : '') +
+    (list(x.items).length ? '<div class="fact extra-box"><' + tag + '>' + list(x.items).map(function(p){ return '<li>' + rich(p) + '</li>'; }).join('') + '</' + tag + '></div>' : '') +
+    (x.note ? '<p class="group-note">' + rich(x.note) + '</p>' : '');
+  if (!x.title && !body) return '';
+  return '<section id="' + esc('s-' + extraId(x, i)) + '">' + secHead(k, x.title || 'Untitled section') + body + '</section>';
 }
 
 function tile(file, src, by, uploadId){
@@ -436,9 +538,345 @@ function tile(file, src, by, uploadId){
     (uploadId ? '<button class="rm" data-photo="' + uploadId + '" aria-label="Remove this photo" title="Remove">×</button>' : '') + '</div>';
 }
 
+// ---- edit mode: change site.json from the page ----
+// Each section's editor is a form built from a description of its fields. Lists of anything
+// (cards, steps, lines, facts...) can be added to, reordered and removed.
+function F(t, label, x){ var o = {t: t, label: label || ''}; for (var k in x || {}) o[k] = x[k]; return o; }
+var RICH = 'Use **bold** for bold and [words](https://…) for a link.';
+function slug(s){ return String(s || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'task'; }
+function pair(label, a, b, add){ return F('list', label, {add: add, item: F('tuple', '', {items: [F('text', a), F('long', b)]})}); }
+var TASK = F('obj', '', {fields: [
+  ['label', F('text', 'Task')],
+  ['when', F('text', 'How often, in words', {hint: 'e.g. "Every 2 days"'})],
+  ['every', F('num', 'Due every … days', {hint: 'Highlights the task when it\'s due. Leave blank for "as needed".'})],
+  ['flag', F('obj', 'Needs doing now', {boxed: true, row: true, hint: 'Marks the task as needed until someone ticks it off on or after this day.', fields: [['since', F('date', 'From')], ['text', F('text', 'Message')]]})],
+  ['id', F('text', 'ID', {hint: 'Sign-offs are saved under this. Leave blank to make one from the task name; changing it hides past sign-offs.'})]
+], dump: function(o){ if (!o) return o; var out = {id: slug(o.id || o.label)}; for (var k in o) if (k !== 'id') out[k] = o[k]; return out; }});
+var STEP = F('obj', '', {fields: [
+  ['text', F('long', 'Step', {hint: RICH})],
+  ['task', F('task', 'Tick-off button', {hint: 'Shows who last did this task, with a button to tick it off.'})]
+], load: function(v){ return typeof v === 'string' ? {text: v} : v; }, dump: function(o){ return o && o.task ? o : o && o.text; }});
+var EXTRA = F('obj', '', {fields: [
+  ['title', F('text', 'Heading')],
+  ['photo', F('photo', 'Photo')],
+  ['text', F('list', 'Paragraphs', {add: 'Add a paragraph', item: F('long', '', {hint: RICH})})],
+  ['items', F('list', 'List', {add: 'Add a list item', item: F('long', '')})],
+  ['ordered', F('bool', 'Number the list')],
+  ['note', F('long', 'Highlighted note', {hint: RICH})]
+]});
+var EDITORS = {
+  top: {label: 'Top of the page', fields: [
+    ['title', F('text', 'Title')],
+    ['highlight', F('text', 'Words to highlight', {hint: 'Part of the title to color, typed exactly as in the title.'})],
+    ['dates', F('obj', 'Dates you need help', {boxed: true, row: true, fields: [['start', F('date', 'First day')], ['end', F('date', 'Last day')]]})],
+    ['timeZone', F('tz', 'Time zone at home', {hint: 'So "today" and "due" are right for everyone, wherever they are.'})],
+    ['welcome', F('list', 'Welcome note', {add: 'Add a paragraph', item: F('long', '', {hint: RICH})})],
+    ['signature', F('text', 'Signed')]
+  ]},
+  who: {label: "Who's who", fields: [['who', F('obj', '', {fields: [
+    ['title', F('text', 'Heading')],
+    ['photo', F('photo', 'Group photo', {hint: 'Optional, shown above the cards.'})],
+    ['items', F('list', 'Cards', {add: 'Add someone', fold: 'name', item: F('obj', '', {fields: [
+      ['name', F('text', 'Name')],
+      ['subtitle', F('text', 'Subtitle', {hint: 'e.g. "Dog, 4 years"'})],
+      ['photo', F('photo', 'Photo')],
+      ['emoji', F('text', 'Emoji', {hint: 'Shown when there is no photo.'})],
+      ['about', F('long', 'About', {hint: RICH})],
+      ['noteLabel', F('text', 'Label for the next line', {hint: 'Leave blank for "Likes".'})],
+      ['note', F('long', 'Likes')],
+      ['tip', F('long', 'Tip', {hint: 'Shown highlighted.'})]
+    ]})})],
+    ['note', F('long', 'Note under the cards', {hint: RICH})]
+  ]})]]},
+  gallery: {label: 'Photos', fields: [['gallery', F('obj', '', {keep: true, fields: [
+    ['title', F('text', 'Heading')],
+    ['intro', F('long', 'Intro', {hint: RICH})],
+    ['photos', F('list', 'Your photos', {item: F('photo', '')})],
+    ['owner', F('text', 'Your photos are from', {hint: 'The name shown on your photos.'})],
+    ['uploads', F('bool', 'Helpers can add photos', {def: true})],
+    ['comments', F('bool', 'Comments on photos', {def: true})]
+  ]})]]},
+  visit: {label: 'What a visit involves', fields: [
+    ['visit', F('obj', '', {fields: [
+      ['title', F('text', 'Heading')],
+      ['duration', F('long', 'How long it takes')],
+      ['steps', F('list', 'Steps', {add: 'Add a step', item: STEP})]
+    ]})],
+    ['info', F('list', 'Info cards', {add: 'Add a card', fold: 'label', hint: 'Small cards under the steps: getting in, where things are…', item: F('obj', '', {fields: [
+      ['label', F('text', 'Heading')],
+      ['photo', F('photo', 'Photo')],
+      ['lines', F('list', 'Lines', {add: 'Add a line', item: F('long', '')})],
+      ['highlight', F('long', 'Highlighted note')],
+      ['photoSlot', F('text', 'Helpers can add a photo here', {hint: 'Give it a short name (e.g. "leash") to let helpers add one photo of their own.'})]
+    ]})})]
+  ]},
+  tips: {label: 'Tips', fields: [['tips', F('obj', '', {fields: [
+    ['title', F('text', 'Heading')],
+    ['cards', F('list', 'Cards', {add: 'Add a card', fold: 'title', item: F('obj', '', {fields: [
+      ['icon', F('text', 'Emoji')],
+      ['title', F('text', 'Heading')],
+      ['items', F('list', 'Items', {add: 'Add an item', item: F('long', '', {hint: RICH})})],
+      ['ordered', F('bool', 'Number the items')],
+      ['note', F('long', 'Highlighted note')]
+    ]})})]
+  ]})]]},
+  care: {label: 'Care & tasks', fields: [['care', F('obj', '', {fields: [
+    ['title', F('text', 'Heading')],
+    ['cards', F('list', 'Cards', {add: 'Add a card', fold: 'title', item: F('obj', '', {fields: [
+      ['icon', F('text', 'Emoji')],
+      ['title', F('text', 'Heading')],
+      ['subtitle', F('text', 'Subtitle')],
+      ['photo', F('photo', 'Photo')],
+      ['credit', F('text', 'Photo credit')],
+      ['facts', pair('Facts', 'Label', 'Value', 'Add a fact')],
+      ['tables', F('list', 'Folding tables', {add: 'Add a table', fold: 0, item: F('tuple', '', {items: [F('text', 'Table name'), pair('Rows', 'Row', 'Value', 'Add a row')]})})],
+      ['tasks', F('list', 'Tasks to tick off', {add: 'Add a task', fold: 'label', item: TASK})],
+      ['stepsTitle', F('text', 'How-to heading', {hint: 'Leave blank for "How to".'})],
+      ['steps', F('list', 'How-to steps', {add: 'Add a step', item: F('long', '', {hint: RICH})})],
+      ['video', F('obj', 'Video link', {boxed: true, row: true, fields: [['url', F('text', 'Address (https://…)')], ['label', F('text', 'Link text')]]})],
+      ['note', F('long', 'Highlighted note', {hint: RICH})]
+    ]})})]
+  ], dump: function(o){
+    // Task ids must be unique across all cards.
+    var seen = {};
+    list(o && o.cards).forEach(function(c){ list(c.tasks).forEach(function(t){ var id = t.id, n = 2; while (seen[id]) id = t.id + '-' + n++; t.id = id; seen[id] = 1; }); });
+    return o;
+  }})]]},
+  schedule: {label: 'Schedule', off: false, fields: [['schedule', F('obj', '', {fields: [
+    ['hidden', F('bool', 'Hide the calendar')],
+    ['title', F('text', 'Heading')],
+    ['times', F('list', 'Times of day to choose from', {add: 'Add a time', hint: '"Flexible" shows as "Any time".', item: F('text', '')})]
+  ], load: function(v){ return v === false ? {hidden: true} : v; }, dump: function(o){ return o && o.hidden ? false : o; }})]]}
+};
+
+function clone(v){ return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+function pathGet(o, p){ var ks = p.split('.'); for (var i = 0; i < ks.length && o != null; i++) o = o[ks[i]]; return o; }
+function pathSet(o, p, v){
+  var ks = p.split('.');
+  for (var i = 0; i < ks.length - 1; i++) { if (!o[ks[i]] || typeof o[ks[i]] !== 'object') o[ks[i]] = /^\d+$/.test(ks[i + 1]) ? [] : {}; o = o[ks[i]]; }
+  o[ks[ks.length - 1]] = v;
+}
+// site.json value -> form value, and back. Dumping drops what's left empty.
+function edLoad(s, v){
+  if (s.load) v = s.load(v);
+  if (s.t === 'obj') { v = v && typeof v === 'object' && !Array.isArray(v) ? v : {}; s.fields.forEach(function(f){ v[f[0]] = edLoad(f[1], v[f[0]]); }); }
+  else if (s.t === 'list') v = list(v).map(function(x){ return edLoad(s.item, x); });
+  else if (s.t === 'tuple') { v = Array.isArray(v) ? v : []; s.items.forEach(function(it, i){ v[i] = edLoad(it, v[i]); }); }
+  return v;
+}
+function edDump(s, v){
+  var out;
+  if (s.t === 'obj') {
+    out = {}; var known = {};
+    s.fields.forEach(function(f){ known[f[0]] = 1; var d = edDump(f[1], v && v[f[0]]); if (d !== undefined) out[f[0]] = d; });
+    // Keys this editor doesn't know about (added by hand) are kept as they were.
+    if (v && typeof v === 'object') Object.keys(v).forEach(function(k){ if (!known[k] && v[k] !== undefined) out[k] = v[k]; });
+    if (!Object.keys(out).length) out = s.keep ? {} : undefined;
+  } else if (s.t === 'list') {
+    out = list(v).map(function(x){ return edDump(s.item, x); }).filter(function(x){ return x !== undefined; });
+    if (!out.length) out = undefined;
+  } else if (s.t === 'tuple') {
+    var parts = s.items.map(function(it, i){ return edDump(it, (v || [])[i]); });
+    out = parts[0] === undefined ? undefined : parts.map(function(x, i){ return x !== undefined ? x : s.items[i].t === 'list' ? [] : ''; });
+  } else if (s.t === 'bool') out = s.def ? (v === false ? false : undefined) : (v ? true : undefined);
+  else if (s.t === 'num') out = v === '' || v == null || !isFinite(+v) || +v <= 0 ? undefined : Math.round(+v);
+  else out = v == null ? undefined : String(v).trim() || undefined;
+  return s.dump ? s.dump(out) : out;
+}
+function newVal(s){ return s.t === 'obj' || s.t === 'tuple' || s.t === 'list' ? edLoad(s, s.t === 'obj' ? {} : []) : ''; }
+
+// What a section's editor edits, and the {key: value} changes saving it sends.
+function secDef(key){
+  var d = EDITORS[key];
+  if (d) return {key: key, label: d.label, fields: d.fields, removable: key !== 'top',
+    get: function(){ var v = {}; d.fields.forEach(function(f){ v[f[0]] = clone(S[f[0]]); }); return v; },
+    put: function(val, remove){
+      var set = {};
+      d.fields.forEach(function(f){ var x = remove ? d.off : edDump(f[1], val[f[0]]); set[f[0]] = x === undefined ? null : x; });
+      return set;
+    }};
+  var id = key.slice(6), xs = list(S.extra), i = xs.map(extraId).indexOf(id), item = i >= 0 ? xs[i] : {id: id};
+  return {key: key, label: i >= 0 ? item.title || 'Your section' : 'New section', fields: [['x', EXTRA]], removable: i >= 0, isNew: i < 0,
+    get: function(){ return {x: clone(item)}; },
+    put: function(val, remove){
+      var arr = clone(xs), x = remove ? undefined : edDump(EXTRA, val.x);
+      if (x) x.id = id;
+      if (i >= 0) { if (x) arr[i] = x; else arr.splice(i, 1); } else if (x) arr.push(x);
+      return {extra: arr.length ? arr : null};
+    }};
+}
+
+var editMode = false, EDIT_LOCKED = false;
+var draft = null;          // the section being edited: {sec, schema, val, dirty}
+var edSchemas = {};        // form path -> its field description, rebuilt with each draw
+var edBusy = null;         // form path a photo is uploading to
+var edSeq = 0;
+var editKey = '';
+try { editKey = localStorage.getItem('home-help-edit') || ''; } catch(e){}
+
+function edOpen(key){
+  var sec = secDef(key);
+  draft = {sec: sec, schema: F('obj', '', {fields: sec.fields}), dirty: !!sec.isNew};
+  draft.val = edLoad(draft.schema, sec.get());
+  openModal(edHtml(), 'editor');
+  var f = modal.querySelector('input,textarea'); if (f && sec.isNew) f.focus();
+}
+function edHtml(){
+  edSchemas = {}; edSeq = 0;
+  return '<h3>Edit: ' + esc(draft.sec.label) + '</h3>' + edField(draft.schema, draft.val, '') +
+    '<datalist id="ed_tz">' + tzNames().map(function(z){ return '<option value="' + esc(z) + '">'; }).join('') + '</datalist>' +
+    '<div class="actions ed-actions">' + (draft.sec.removable ? '<button class="btn danger" id="ed_remove">' + (draft.sec.key === 'schedule' ? 'Hide section' : 'Remove section') + '</button>' : '') +
+    '<button class="btn ghost" id="ed_cancel">Cancel</button><button class="btn" id="ed_save">Save</button></div>';
+}
+var TZ = null;
+function tzNames(){ if (!TZ) { try { TZ = Intl.supportedValuesOf('timeZone'); } catch(e){ TZ = []; } } return TZ; }
+// Redraw the open editor in place, keeping the scroll position.
+function showEditor(){
+  if (!modal || !draft) return;
+  var card = modal.firstChild, top = card.scrollTop;
+  card.innerHTML = edHtml(); card.scrollTop = top;
+}
+function edTools(lp, i, n){
+  var p = esc(lp + '.' + i);
+  return '<span class="ed-tools"><button type="button" data-ed-up="' + p + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Move up" title="Move up">↑</button>' +
+    '<button type="button" data-ed-down="' + p + '"' + (i === n - 1 ? ' disabled' : '') + ' aria-label="Move down" title="Move down">↓</button>' +
+    '<button type="button" class="del" data-ed-del="' + p + '" aria-label="Remove" title="Remove">×</button></span>';
+}
+function edField(s, v, p, bare){
+  edSchemas[p] = s;
+  var id = 'ed_' + (++edSeq), at = ' id="' + id + '" data-p="' + esc(p) + '"';
+  var lab = s.label && !bare ? '<label for="' + id + '">' + esc(s.label) + '</label>' : '';
+  var hint = s.hint ? '<span class="ed-hint">' + esc(s.hint) + '</span>' : '';
+  var val = esc(v == null ? '' : v), ph = bare && s.label ? ' placeholder="' + esc(s.label) + '"' : '';
+  switch (s.t) {
+    case 'text': case 'tz': return '<div class="field">' + lab + '<input' + at + ph + ' value="' + val + '"' + (s.t === 'tz' ? ' list="ed_tz" autocomplete="off"' : '') + '>' + hint + '</div>';
+    case 'date': return '<div class="field">' + lab + '<input' + at + ' type="date" value="' + val + '">' + hint + '</div>';
+    case 'num': return '<div class="field">' + lab + '<input' + at + ' type="number" min="1" step="1" value="' + val + '">' + hint + '</div>';
+    case 'long': return '<div class="field">' + lab + '<textarea' + at + ph + ' rows="2">' + val + '</textarea>' + hint + '</div>';
+    case 'bool': return '<div class="field"><label class="ed-check"><input type="checkbox"' + at + ((s.def ? v !== false : !!v) ? ' checked' : '') + '> ' + esc(s.label) + '</label>' + hint + '</div>';
+    case 'task':
+      var ts = allTasks(), opts = '<option value="">None</option>' + ts.map(function(t){ return '<option value="' + esc(t.id) + '"' + (t.id === v ? ' selected' : '') + '>' + esc(t.label || t.id) + '</option>'; }).join('');
+      if (v && !findTask(v)) opts += '<option value="' + val + '" selected>' + val + '</option>';
+      return '<div class="field">' + lab + '<select' + at + '>' + opts + '</select>' + hint + '</div>';
+    case 'photo':
+      var have = v && hasPhoto(v), busy = edBusy === p;
+      return '<div class="field">' + lab + '<div class="ed-photo">' + (have ? '<img src="photos/' + encodeURIComponent(v) + '" alt="">' : '<span class="none">' + (v ? esc(v) + ' (missing)' : 'No photo') + '</span>') +
+        '<button type="button" class="btn small ghost" data-ed-upload="' + esc(p) + '"' + (edBusy ? ' disabled' : '') + '>' + (busy ? 'Uploading…' : v ? 'Replace' : 'Upload') + '</button>' +
+        (v ? '<button type="button" class="btn small ghost" data-ed-clear="' + esc(p) + '">Remove</button>' : '') +
+        (PHOTOS.length ? '<select' + at + ' aria-label="Or pick a photo already uploaded"><option value="">' + (v ? 'Pick another…' : 'Or pick one…') + '</option>' + PHOTOS.map(function(f){ return '<option value="' + esc(f) + '"' + (f === v ? ' selected' : '') + '>' + esc(f) + '</option>'; }).join('') + '</select>' : '') +
+        '</div>' + hint + '</div>';
+    case 'obj':
+      var inner = s.fields.map(function(f){ return edField(f[1], v && v[f[0]], p ? p + '.' + f[0] : f[0]); }).join('');
+      if (s.row) inner = '<div class="row">' + inner + '</div>';
+      return s.label ? '<fieldset class="ed-obj' + (s.boxed ? ' boxed' : '') + '"><legend>' + esc(s.label) + '</legend>' + hint + inner + '</fieldset>' : '<div class="ed-obj">' + hint + inner + '</div>';
+    case 'tuple':
+      var simple = s.items.every(function(it){ return it.t !== 'list'; });
+      var cells = s.items.map(function(it, i){ return edField(it, (v || [])[i], p + '.' + i, simple && bare); }).join('');
+      return simple ? '<div class="row">' + cells + '</div>' : '<div class="ed-obj">' + cells + '</div>';
+    case 'list':
+      var arr = Array.isArray(v) ? v : [], leaf = s.item.t !== 'obj' && !(s.item.t === 'tuple' && s.fold != null);
+      var items = arr.map(function(x, i){
+        var ip = p + '.' + i, tools = edTools(p, i, arr.length);
+        if (s.fold != null) {
+          var t = (x && (x.icon || x.emoji) ? (x.icon || x.emoji) + ' ' : '') + ((x && x[s.fold]) || (s.item.t === 'obj' ? 'New item' : 'New table'));
+          return '<details class="ed-item" data-fold="ed:' + esc(ip) + '"' + (foldOpen['ed:' + ip] ? ' open' : '') + '><summary><span>' + esc(t) + '</span>' + tools + '</summary>' + edField(s.item, x, ip) + '</details>';
+        }
+        if (leaf) return '<div class="ed-row">' + edField(s.item, x, ip, true) + tools + '</div>';
+        return '<div class="ed-item"><div class="ed-bar"><span>' + (i + 1) + '</span>' + tools + '</div>' + edField(s.item, x, ip) + '</div>';
+      }).join('');
+      var add = s.item.t === 'photo'
+        ? '<button type="button" class="btn small ghost ed-plus" data-ed-photos="' + esc(p) + '"' + (edBusy ? ' disabled' : '') + '>' + (edBusy === p ? 'Uploading…' : '+ Upload photos') + '</button>'
+        : '<button type="button" class="btn small ghost ed-plus" data-ed-add="' + esc(p) + '">+ ' + esc(s.add || 'Add') + '</button>';
+      return '<div class="ed-list">' + (s.label || s.hint ? '<div class="ed-lh">' + (s.label ? '<b>' + esc(s.label) + '</b>' : '') + hint + '</div>' : '') + items + add + '</div>';
+  }
+  return '';
+}
+
+// Moves the open/closed state of folded list items along with the items.
+function edShiftFolds(lp, from, to){ var a = 'ed:' + lp + '.' + from, b = 'ed:' + lp + '.' + to, x = foldOpen[a]; foldOpen[a] = foldOpen[b]; foldOpen[b] = x; }
+function edClick(t, a){
+  if (a('data-ed-add')) {
+    var lp = a('data-ed-add'), s = edSchemas[lp], arr = pathGet(draft.val, lp);
+    if (!Array.isArray(arr)) { arr = []; pathSet(draft.val, lp, arr); }
+    arr.push(newVal(s.item)); foldOpen['ed:' + lp + '.' + (arr.length - 1)] = true;
+    draft.dirty = true; showEditor();
+    var added = modal.querySelectorAll('[data-p^="' + lp + '.' + (arr.length - 1) + '"]')[0]; if (added) added.focus();
+    return true;
+  }
+  var mv = a('data-ed-up') || a('data-ed-down') || a('data-ed-del');
+  if (mv) {
+    var ks = mv.split('.'), i = +ks.pop(), lp2 = ks.join('.'), list2 = pathGet(draft.val, lp2);
+    if (a('data-ed-del')) {
+      list2.splice(i, 1);
+      for (var k = i; k < list2.length; k++) edShiftFolds(lp2, k, k + 1);
+    } else {
+      var j = a('data-ed-up') ? i - 1 : i + 1;
+      if (j < 0 || j >= list2.length) return true;
+      var tmp = list2[i]; list2[i] = list2[j]; list2[j] = tmp; edShiftFolds(lp2, i, j);
+    }
+    draft.dirty = true; showEditor(); return true;
+  }
+  if (a('data-ed-clear')) { pathSet(draft.val, a('data-ed-clear'), ''); draft.dirty = true; showEditor(); return true; }
+  if (a('data-ed-upload') || a('data-ed-photos')) {
+    edTarget = {path: a('data-ed-upload') || a('data-ed-photos'), many: !!a('data-ed-photos')};
+    edFile.multiple = edTarget.many; edFile.value = ''; edFile.click(); return true;
+  }
+  return false;
+}
+function edInput(el){
+  var p = el.getAttribute && el.getAttribute('data-p');
+  if (!p || !draft) return;
+  pathSet(draft.val, p, el.type === 'checkbox' ? el.checked : el.value); draft.dirty = true;
+  if ((edSchemas[p] || {}).t === 'photo') showEditor();
+}
+function edClose(){ if (draft && draft.dirty && !confirm('Discard your changes?')) return; closeModal(); }
+
+// Sends the edit password if there is one; when the server asks for it, asks once and retries.
+function storeKey(){ try { if (editKey) localStorage.setItem('home-help-edit', editKey); else localStorage.removeItem('home-help-edit'); } catch(e){} }
+function edFetch(url, opts, retried){
+  opts.headers = opts.headers || {};
+  if (editKey) opts.headers['X-Edit-Password'] = encodeURIComponent(editKey);
+  return fetch(url, opts).then(function(r){
+    if (r.status !== 401 || retried) { if (r.status === 401) { editKey = ''; storeKey(); } return r; }
+    var pw = prompt(editKey ? 'Wrong password. Password to edit this page:' : 'Password to edit this page:');
+    if (!pw) return r;
+    editKey = pw; storeKey();
+    return edFetch(url, opts, true);
+  });
+}
+function edPatch(set){
+  return edFetch('api/site', {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({set: set})}).then(function(r){
+    return r.json().catch(function(){ return {}; }).then(function(j){
+      if (r.ok && j.site) { S = j.site; return true; }
+      toast(j.error === 'site_json_broken' ? 'site.json has a mistake; fix it by hand first' : r.status === 401 ? 'Wrong password' : 'Could not save. Try again.');
+      return false;
+    });
+  }, function(){ toast('Could not save. Try again.'); return false; });
+}
+function edSave(remove){
+  if (remove && !confirm(draft.sec.key === 'schedule' ? 'Hide the calendar from helpers?' : 'Remove this whole section?')) return;
+  var btn = document.getElementById(remove ? 'ed_remove' : 'ed_save'), label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  edPatch(draft.sec.put(draft.val, remove)).then(function(ok){
+    if (!ok) { btn.disabled = false; btn.textContent = label; return; }
+    closeModal(); render(); toast(remove ? 'Removed' : 'Saved');
+  });
+}
+function moveSection(key, by){
+  var o = order(), i = o.indexOf(key), j = i + by;
+  if (i < 0 || j < 0 || j >= o.length) return;
+  o[i] = o[j]; o[j] = key;
+  edPatch({order: o}).then(function(ok){ if (ok) render(); });
+}
+function enterEdit(){
+  var go = function(){ editMode = true; render(); };
+  if (!EDIT_LOCKED) { go(); return; }
+  edFetch('api/site/check', {method: 'POST'}).then(function(r){ if (r.ok) go(); else toast('Wrong password'); }, function(){ toast('Could not connect. Try again.'); });
+}
+
 // ---- dialogs ----
 function openModal(html, cls){ modal = document.createElement('div'); modal.className = 'modal'; modal.innerHTML = '<div class="card' + (cls ? ' ' + cls : '') + '" role="dialog" aria-modal="true">' + html + '</div>'; app.appendChild(modal); var f = !cls && modal.querySelector('input,textarea'); if (f) f.focus(); }
-function closeModal(){ var wasViewing = viewing; if (modal) modal.remove(); modal = null; editing = null; viewing = null; replyTo = null; if (wasViewing) render(); }
+function closeModal(){ var wasViewing = viewing; if (modal) modal.remove(); modal = null; editing = null; viewing = null; replyTo = null; draft = null; if (wasViewing) render(); }
 function toast(msg){ var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2200); }
 function nameField(id, label){ return '<div class="field"><label for="' + id + '">' + (label || 'Your name') + '</label><input id="' + id + '" value="' + esc(visitor.name) + '" autocomplete="name" maxlength="60"></div>'; }
 
@@ -518,7 +956,7 @@ function postComment(){
 }
 
 // ---- talking to the server ----
-function applyServer(st){ if (!st || !st.reservations) return; RES = st.reservations; PHOTOS = st.photos || []; UPLOADS = st.uploads || []; CHORES = st.chores || []; COMMENTS = st.comments || []; }
+function applyServer(st){ if (!st || !st.reservations) return; RES = st.reservations; PHOTOS = st.photos || []; UPLOADS = st.uploads || []; CHORES = st.chores || []; COMMENTS = st.comments || []; EDIT_LOCKED = !!st.editLocked; }
 function send(method, url, body){
   return fetch(url, {method: method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined})
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ applyServer(j); return {ok: r.ok, status: r.status, j: j}; }); });
@@ -543,6 +981,16 @@ function loadState(){ return fetch('api/state').then(function(r){ return r.json(
 app.addEventListener('click', function(ev){
   var t = ev.target.closest('button, a'); if (!t) return;
   var id = t.id, a = function(n){ return t.getAttribute(n); };
+  if (draft && edClick(t, a)) { ev.preventDefault(); return; }
+  if (a('data-edit')) { edOpen(a('data-edit')); return; }
+  if (a('data-sec-up')) { moveSection(a('data-sec-up'), -1); return; }
+  if (a('data-sec-down')) { moveSection(a('data-sec-down'), 1); return; }
+  if (id === 'ed_enter') { enterEdit(); return; }
+  if (id === 'ed_done') { editMode = false; render(); return; }
+  if (id === 'ed_addsec') { edOpen('extra:x' + Date.now().toString(36)); return; }
+  if (id === 'ed_save') { edSave(false); return; }
+  if (id === 'ed_remove') { edSave(true); return; }
+  if (id === 'ed_cancel') { edClose(); return; }
   if (a('data-view')) { ev.preventDefault(); viewing = {file: a('data-view'), src: a('href'), by: a('data-by')}; replyTo = null; showViewer(); return; }
   if (a('data-reply')) { replyTo = +a('data-reply'); showViewer(true); return; }
   if (a('data-uncomment')) {
@@ -585,7 +1033,8 @@ app.addEventListener('click', function(ev){
 });
 // 'toggle' doesn't bubble, so listen in the capture phase.
 app.addEventListener('toggle', function(ev){ var k = ev.target.getAttribute && ev.target.getAttribute('data-fold'); if (k) foldOpen[k] = ev.target.open; }, true);
-document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape' && modal) closeModal(); });
+app.addEventListener('input', function(ev){ edInput(ev.target); });
+document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape' && modal) { if (draft) edClose(); else closeModal(); } });
 
 // The file picker lives outside #app so re-renders can't detach it mid-pick.
 var photoInput = document.createElement('input');
@@ -608,6 +1057,31 @@ photoInput.addEventListener('change', function(){
     var bad = (st.failed || 0) + big, ok = files.length + big - bad;
     toast(ok ? 'Added ' + ok + ' photo' + (ok > 1 ? 's' : '') + (bad ? '; ' + bad + ' could not be used' : '') : 'Could not use ' + (bad > 1 ? 'those files' : 'that file'));
   }, function(){ toast('Upload failed. Try again.'); }).then(function(){ uploading = false; render(); });
+});
+
+// Edit mode's own file picker, for your photos (they go to photos/).
+var edFile = document.createElement('input'), edTarget = null;
+edFile.type = 'file'; edFile.accept = 'image/*'; edFile.hidden = true;
+document.body.appendChild(edFile);
+edFile.addEventListener('change', function(){
+  var files = Array.prototype.slice.call(edFile.files || []), tg = edTarget;
+  if (!files.length || !tg) return;
+  var big = files.filter(function(f){ return f.size > 25 * 1024 * 1024; }).length;
+  files = files.filter(function(f){ return f.size <= 25 * 1024 * 1024; }).slice(0, 20);
+  if (!files.length) { toast('Too big (25 MB max)'); return; }
+  var fd = new FormData();
+  files.forEach(function(f){ fd.append('photos', f); });
+  edBusy = tg.path; showEditor();
+  edFetch('api/site/photos', {method: 'POST', body: fd}).then(function(r){ return r.json(); }).then(function(st){
+    applyServer(st);
+    var got = st.files || [], bad = (st.failed || 0) + big;
+    if (draft && got.length) {
+      if (tg.many) { var arr = pathGet(draft.val, tg.path); if (!Array.isArray(arr)) { arr = []; pathSet(draft.val, tg.path, arr); } arr.push.apply(arr, got); }
+      else pathSet(draft.val, tg.path, got[0]);
+      draft.dirty = true;
+    }
+    toast(st.error === 'password' ? 'Wrong password' : got.length ? 'Uploaded ' + got.length + ' photo' + (got.length > 1 ? 's' : '') + (bad ? '; ' + bad + ' could not be used' : '') + '. Save to keep.' : 'Could not use ' + (bad > 1 ? 'those files' : 'that file'));
+  }, function(){ toast('Upload failed. Try again.'); }).then(function(){ edBusy = null; showEditor(); });
 });
 
 // ---- start: read site.json, then the shared state; refresh so others' changes show up ----

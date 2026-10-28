@@ -1,8 +1,9 @@
 // Home Help: a small shared page for whoever is helping at your place (pet sitting, plant
-// watering, house watching...). Everything you'd want to change lives in site.json; this
-// server only stores what visitors add: schedule sign-ups, task sign-offs, photos, comments.
+// watering, house watching...). Everything you'd want to change lives in site.json, which you
+// can edit by hand or from the page's edit mode. The server also stores what visitors add:
+// schedule sign-ups, task sign-offs, photos, comments.
 import { Database } from "bun:sqlite";
-import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 
 const PORT = Number(process.env.PORT || 3000);
 const here = (p) => new URL(p, import.meta.url).pathname;
@@ -14,6 +15,9 @@ const DATA_DIR = process.env.DATA_DIR || here("./data/");
 const UPLOAD_DIR = DATA_DIR.replace(/\/?$/, "/") + "uploads/";
 mkdirSync(UPLOAD_DIR, { recursive: true });
 
+// Set EDIT_PASSWORD to require a password for the page's edit mode; without it anyone can edit.
+const EDIT_PASSWORD = process.env.EDIT_PASSWORD || "";
+
 const DEFAULT_TIMES = ["Morning", "Midday", "Afternoon", "Evening", "Flexible"];
 
 // site.json is read fresh on each use, so edits show up on the next page load without a restart.
@@ -23,6 +27,37 @@ function site() {
 const timesOf = (s) => (Array.isArray(s.schedule?.times) && s.schedule.times.length ? s.schedule.times : DEFAULT_TIMES);
 // Info cards with a "photoSlot" let visitors add one photo of their own (e.g. where the vacuum is).
 const slotsOf = (s) => (s.info || []).map((c) => c.photoSlot).filter(Boolean);
+
+// Short arrays and objects stay on one line, so site.json stays easy to edit by hand.
+function inline(v) {
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) return "[" + v.map(inline).join(", ") + "]";
+  const kv = Object.entries(v).map(([k, x]) => JSON.stringify(k) + ": " + inline(x));
+  return kv.length ? "{ " + kv.join(", ") + " }" : "{}";
+}
+function pretty(v, ind = "") {
+  const one = inline(v);
+  if (v === null || typeof v !== "object" || (ind && one.length + ind.length <= 140)) return one;
+  const next = ind + "  ", arr = Array.isArray(v);
+  const items = arr ? v.map((x) => next + pretty(x, next)) : Object.entries(v).map(([k, x]) => next + JSON.stringify(k) + ": " + pretty(x, next));
+  if (!items.length) return one;
+  // At the top, a blank line before each section.
+  const body = items.map((line, i) => (i && !ind && !arr && /^\s*"[^"]*": [[{]/.test(line) ? "\n" : "") + line).join(",\n");
+  return (arr ? "[" : "{") + "\n" + body + "\n" + ind + (arr ? "]" : "}");
+}
+// Write to a temporary file first, so a crash mid-write can't leave site.json half written.
+function writeSite(s) {
+  writeFileSync(SITE + ".tmp", pretty(s) + "\n");
+  renameSync(SITE + ".tmp", SITE);
+}
+// The password travels URI-encoded, since headers can only carry plain ASCII.
+function canEdit(req) {
+  if (!EDIT_PASSWORD) return true;
+  let given = "";
+  try { given = decodeURIComponent(req.headers.get("x-edit-password") || ""); } catch {}
+  const a = Buffer.from(given), b = Buffer.from(EDIT_PASSWORD);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 const db = new Database(DATA_DIR.replace(/\/?$/, "/") + "home-help.db", { create: true });
 db.run("PRAGMA journal_mode = WAL");
@@ -65,6 +100,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TASK_RE = /^[A-Za-z0-9_-]{1,40}$/;
 const PHOTO_RE = /^[A-Za-z0-9._ -]+\.(jpe?g|png|webp|gif|svg)$/i;
 const UPLOAD_RE = /^up-[a-z0-9-]+\.jpg$/;
+const KEY_RE = /^[A-Za-z][A-Za-z0-9_-]{0,40}$/;
 const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 const TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", svg: "image/svg+xml" };
 
@@ -80,6 +116,7 @@ function state() {
     uploads: db.query("SELECT id, file, name, slot FROM photos ORDER BY id").all(),
     chores: db.query("SELECT id, task, date, name FROM chores ORDER BY date DESC, id DESC").all(),
     comments: db.query("SELECT id, photo, parent, name, body, created_at FROM comments ORDER BY id").all(),
+    editLocked: !!EDIT_PASSWORD,
   };
 }
 
@@ -124,21 +161,22 @@ function sniff(b) {
 // Re-encode as a resized JPEG: fixes rotation and strips metadata such as GPS location.
 // Needs ImageMagick's `convert` (or `magick`) on the machine.
 const MAGICK = Bun.which("magick") ? ["magick"] : ["convert"];
-async function savePhoto(file) {
+// Visitors' photos go to data/uploads/; photos added in edit mode go to photos/ with yours.
+async function savePhoto(file, dir = UPLOAD_DIR, prefix = "up") {
   if (file.size > MAX_PHOTO_BYTES) return { error: "too_big" };
   const bytes = new Uint8Array(await file.arrayBuffer());
   const fmt = sniff(bytes);
   if (!fmt) return { error: "not_an_image" };
-  const name = `up-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}.jpg`;
+  const name = `${prefix}-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}.jpg`;
   let proc;
   try {
-    proc = Bun.spawn([...MAGICK, `${fmt}:-[0]`, "-auto-orient", "-resize", "1600x1600>", "-strip", "-quality", "85", `jpeg:${UPLOAD_DIR}${name}`],
+    proc = Bun.spawn([...MAGICK, `${fmt}:-[0]`, "-auto-orient", "-resize", "1600x1600>", "-strip", "-quality", "85", `jpeg:${dir}${name}`],
       { stdin: bytes, stdout: "ignore", stderr: "ignore" });
   } catch { return { error: "no_imagemagick" }; }
   const timer = setTimeout(() => proc.kill(), 30000);
   const code = await proc.exited;
   clearTimeout(timer);
-  if (code !== 0) { rmSync(UPLOAD_DIR + name, { force: true }); return { error: "unreadable" }; }
+  if (code !== 0) { rmSync(dir + name, { force: true }); return { error: "unreadable" }; }
   return { file: name };
 }
 
@@ -170,6 +208,31 @@ Bun.serve({
     }
 
     if (pathname === "/api/state" && req.method === "GET") return json(state());
+
+    // Edit mode: replace or remove top-level parts of site.json ({set: {who: {...}, info: null}}).
+    if (pathname === "/api/site/check" && req.method === "POST") return json({ ok: canEdit(req) }, canEdit(req) ? 200 : 401);
+    if (pathname === "/api/site" && req.method === "PATCH") {
+      if (!canEdit(req)) return json({ error: "password" }, 401);
+      const b = await req.json().catch(() => null);
+      const set = b && b.set;
+      if (!set || typeof set !== "object" || Array.isArray(set) || !Object.keys(set).every((k) => KEY_RE.test(k))) return json({ error: "bad_request" }, 400);
+      // Don't overwrite a hand edit that has a typo in it; it needs fixing by hand first.
+      let cur;
+      try { cur = JSON.parse(readFileSync(SITE, "utf8")); } catch { return json({ error: "site_json_broken" }, 409); }
+      for (const [k, v] of Object.entries(set)) { if (v === null) delete cur[k]; else cur[k] = v; }
+      writeSite(cur);
+      return json({ site: cur });
+    }
+    // Edit mode: upload your own photos into photos/ (up to 20 at a time).
+    if (pathname === "/api/site/photos" && req.method === "POST") {
+      if (!canEdit(req)) return json({ error: "password" }, 401);
+      const form = await req.formData().catch(() => null);
+      const files = form ? form.getAll("photos").filter((f) => f instanceof Blob).slice(0, 20) : [];
+      if (!files.length) return json({ error: "no_files" }, 400);
+      const saved = [];
+      for (const f of files) { const r = await savePhoto(f, PHOTO_DIR, "p"); if (r.file) saved.push(r.file); }
+      return json({ ...state(), files: saved, failed: files.length - saved.length }, saved.length ? 200 : 400);
+    }
 
     // Anyone can add photos to the gallery (up to 10 at a time) and remove uploaded ones.
     // A slot photo (one per slot) replaces the previous one.
